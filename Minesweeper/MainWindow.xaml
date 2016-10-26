@@ -1,12 +1,39 @@
-﻿<Window x:Class="Minesweeper.MainWindow"
+﻿<Window x:Name="window" x:Class="Minesweeper.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Minesweeper"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+        Title="Minesweeper"
+        Height="350" Width="525"
+        MinHeight="200" MinWidth="200"
+        KeyUp="window_KeyUp"
+        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+
+    <StackPanel>
+        <Menu>
+            <MenuItem Header="Game">
+                <MenuItem Header="New">
+                    <MenuItem Header="Easy" Click="GameNewEasy_Click"/>
+                    <MenuItem Header="Medium" Click="GameNewMedium_Click"/>
+                    <MenuItem Header="Hard" Click="GameNewHard_Click"/>
+                </MenuItem>
+                <MenuItem Header="Exit" InputGestureText="{x:Static local:MainWindow.GameExit_KeyStr}" Click="GameExit_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Border BorderThickness="4">
+            <Border.BorderBrush>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
+            </Border.BorderBrush>
+            <DockPanel Margin="5">
+                <TextBlock x:Name="TimerText" Text="0" FontSize="20" DockPanel.Dock="Left"/>
+                <TextBlock x:Name="MinesLeft" Text="0" FontSize="20" DockPanel.Dock="Right"/>
+                <Image HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <Grid x:Name="MineFieldGrid" ShowGridLines="True" Margin="5"/>
+    </StackPanel>
 </Window>
