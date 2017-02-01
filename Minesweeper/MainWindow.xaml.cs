@@ -4,179 +4,153 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace Minesweeper
 {
-	public partial class MainWindow : Window
-	{
-		public static Key GameExit_Key
-		{
-			get { return Key.Escape; }
-		}
+    public partial class MainWindow : Window
+    {
+        /* UI resources */
+        private readonly SolidColorBrush CELL_BACKGROUND         = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
+        private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
-		public static string GameExit_KeyStr
-		{
-			get { return GameExit_Key.ToString(); }
-		}
+        private readonly ImageBrush mineImage = new ImageBrush();
+        private readonly ImageBrush flagImage = new ImageBrush();
 
-		private BitmapSource mineImage;
-		private BitmapSource flagImage;
+        public MainWindow()
+        {
+            InitializeComponent();
 
-		private SolidColorBrush cellBackground = new SolidColorBrush(Color.FromArgb(0xff, 0xdd, 0xdd, 0xdd));
-		private SolidColorBrush clearedCellBackground = new SolidColorBrush(Color.FromArgb(0xff, 0xee, 0xee, 0xee));
+            mineImage.ImageSource = App.LoadResource("mine.png", u => new BitmapImage(u));
+            flagImage.ImageSource = App.LoadResource("flag.png", u => new BitmapImage(u));
 
-		// time the current game was started
-		private DateTime startTime;
-		private bool gameOver = false;
-		private bool firstClick = true;
+            App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).Seconds.ToString();
+        }
 
-		private DispatcherTimer timer;
+        private void SetupMineFieldUI(int width, int height, int mineCount)
+        {
+            // clear data from previous game
+            MineFieldGrid.Children.Clear();
+            MineFieldGrid.RowDefinitions.Clear();
+            MineFieldGrid.ColumnDefinitions.Clear();
 
-		public MainWindow()
-		{
-			InitializeComponent();
+            /* setup our rows and columns for cells */
+            for (int i = 0; i < height; ++i)
+                MineFieldGrid.RowDefinitions.Add(new RowDefinition());
 
-			mineImage = App.LoadResource("mine.png", u => new BitmapImage(u));
-			flagImage = App.LoadResource("flag.png", u => new BitmapImage(u));
+            for (int i = 0; i < width; ++i)
+                MineFieldGrid.ColumnDefinitions.Add(new ColumnDefinition());
 
-			timer = new DispatcherTimer(new TimeSpan(0, 0, 1), DispatcherPriority.Send, (o, e) => TimerText.Text = (DateTime.Now - startTime).Seconds.ToString(), Dispatcher);
-			timer.Stop();
-		}
+            // create each cell
+            // set style data
+            // add event handlers
+            for (int i = 0; i < width; ++i)
+            {
+                for (int j = 0; j < height; ++j)
+                {
+                    var lbl = new Label();
 
-		private void SetupMineFieldUI()
-		{
-			var field = App.Current.CurrentGame;
+                    Grid.SetColumn(lbl, i);
+                    Grid.SetRow(lbl, j);
 
-			for(int i = 0; i < field.Height; ++i)
-				MineFieldGrid.RowDefinitions.Add(new RowDefinition());
+                    lbl.MinWidth  = 32;
+                    lbl.MinHeight = 32;
 
-			for(int i = 0; i < field.Width; ++i)
-				MineFieldGrid.ColumnDefinitions.Add(new ColumnDefinition());
+                    lbl.Background = CELL_BACKGROUND;
 
-			for(int i = 0; i < field.Height; ++i)
-			{
-				for(int j = 0; j < field.Width; ++j)
-				{
-					var lbl = new Label();
-					Grid.SetRow(lbl, i);
-					Grid.SetColumn(lbl, j);
-					lbl.MinWidth = 32;
-					lbl.MinHeight = 32;
-					lbl.Background = cellBackground;
-					lbl.HorizontalContentAlignment = HorizontalAlignment.Center;
-					lbl.VerticalContentAlignment = VerticalAlignment.Center;
+                    lbl.HorizontalContentAlignment = HorizontalAlignment.Center;
+                    lbl.VerticalContentAlignment   = VerticalAlignment.Center;
 
-					lbl.MouseLeftButtonUp += Cell_MouseUp;
-					lbl.MouseRightButtonUp += Cell_MouseUp;
+                    lbl.MouseLeftButtonUp  += Cell_MouseLeftUp;
+                    lbl.MouseRightButtonUp += Cell_MouseRightUp;
 
-					MineFieldGrid.Children.Add(lbl);
-				}
-			}
+                    MineFieldGrid.Children.Add(lbl);
+                }
+            }
 
-			MinesLeft.Text = field.MineCount.ToString();
+            MinesLeft.Text = mineCount.ToString();
+        }
 
-			startTime = DateTime.Now;
-			timer.Start();
+        // User is attempting to clear a cell
+        private void Cell_MouseLeftUp(object sender, MouseButtonEventArgs e)
+        {
+            var lbl = (Label)sender;
 
-			gameOver = false;
-			firstClick = true;
-		}
+            int neighboringMines = 0;
 
-		private void Cell_MouseUp(object sender, MouseButtonEventArgs e)
-		{
-			if(!gameOver)
-			{
-				var game = App.Current.CurrentGame;
+            if (App.TryClearCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref neighboringMines))
+            {
+                // if the cell was already flagged, don't touch it
+                if (neighboringMines != -1)
+                {
+                    lbl.Content = neighboringMines.ToString();
+                    lbl.Background = CELL_CLEARED_BACKGROUND;
+                }
+            }
+            else
+            {
+                lbl.Background = mineImage;
 
-				var lbl = (Label)sender;
+                MessageBox.Show("Game Over!");
+            }
 
-				int x = Grid.GetRow(lbl);
-				int y = Grid.GetColumn(lbl);
+            e.Handled = true;
+        }
 
-				switch(e.ChangedButton)
-				{
-					case MouseButton.Left:
-						e.Handled = true;
+        // User is flagging a cell as a mine
+        private void Cell_MouseRightUp(object sender, MouseButtonEventArgs e)
+        {
+            var lbl = (Label)sender;
 
-						if(game.Clear(x, y))
-						{
-							lbl.Content = game[x, y].NeighboringMines.ToString();
-							lbl.Background = clearedCellBackground;
-							
-							if(firstClick)
-							{
-								// clear all adjacent cells that are not mines
-								firstClick = false;
-							}
-						}
-						else
-						{
-							MessageBox.Show("Game Over!");
-							timer.Stop();
-							gameOver = true;
-						}
-						break;
+            int flagsLeft = 0;
 
-					case MouseButton.Right:
-						e.Handled = true;
+            if (App.ToggleFlagCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref flagsLeft))
+            {
+                lbl.Background = flagImage;
+            }
+            else
+            {
+                lbl.Background = CELL_BACKGROUND;
+            }
 
-						if(!game[x, y].Cleared)
-						{
-							if(game.ToggleFlag(x, y))
-								lbl.Background = new ImageBrush(flagImage);
-							else
-								lbl.Background = cellBackground;
-						}
+            MinesLeft.Text = flagsLeft.ToString();
+            
+            e.Handled = true;
+        }
 
-						MinesLeft.Text = (game.MineCount - game.Flags).ToString();
-						break;
+        private void GameNewEasy_Click(object sender, RoutedEventArgs e)
+        {
+            var easy = MineField.Easy;
 
-					case MouseButton.Middle:
-						// clear all adjacent cells with zero neighboring mines
-						e.Handled = true;
-						break;
+            SetupMineFieldUI(easy.Width, easy.Height, easy.MineCount);
+            App.StartNewGame(easy);
 
-					default:
-						break;
-				}
-			}
-		}
+            e.Handled = true;
+        }
 
-		private void window_KeyUp(object sender, KeyEventArgs e)
-		{
-			if(e.Key == Key.Escape)
-			{
-				Close();
-				e.Handled = true;
-			}
-		}
+        private void GameNewMedium_Click(object sender, RoutedEventArgs e)
+        {
+            var medium = MineField.Medium;
 
-		private void GameNewEasy_Click(object sender, RoutedEventArgs e)
-		{
-			App.Current.CurrentGame = App.Easy;
-			SetupMineFieldUI();
-			e.Handled = true;
-		}
+            SetupMineFieldUI(medium.Width, medium.Height, medium.MineCount);
+            App.StartNewGame(medium);
 
-		private void GameNewMedium_Click(object sender, RoutedEventArgs e)
-		{
-			App.Current.CurrentGame = App.Medium;
-			SetupMineFieldUI();
-			e.Handled = true;
-		}
+            e.Handled = true;
+        }
 
-		private void GameNewHard_Click(object sender, RoutedEventArgs e)
-		{
-			App.Current.CurrentGame = App.Hard;
-			SetupMineFieldUI();
-			e.Handled = true;
-		}
+        private void GameNewHard_Click(object sender, RoutedEventArgs e)
+        {
+            var hard = MineField.Hard;
 
-		private void GameExit_Click(object sender, RoutedEventArgs e)
-		{
-			Close();
-			e.Handled = true;
-		}
-	}
+            SetupMineFieldUI(hard.Width, hard.Height, hard.MineCount);
+            App.StartNewGame(hard);
+
+            e.Handled = true;
+        }
+
+        private void GameExit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+            e.Handled = true;
+        }
+    }
 }

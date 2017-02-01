@@ -8,8 +8,9 @@
         Title="Minesweeper"
         Height="350" Width="525"
         MinHeight="200" MinWidth="200"
-        KeyUp="window_KeyUp"
-        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
 
     <StackPanel>
         <Menu>
@@ -19,7 +20,7 @@
                     <MenuItem Header="Medium" Click="GameNewMedium_Click"/>
                     <MenuItem Header="Hard" Click="GameNewHard_Click"/>
                 </MenuItem>
-                <MenuItem Header="Exit" InputGestureText="{x:Static local:MainWindow.GameExit_KeyStr}" Click="GameExit_Click"/>
+                <MenuItem Header="Exit" Click="GameExit_Click"/>
             </MenuItem>
         </Menu>
 
@@ -30,7 +31,7 @@
             <DockPanel Margin="5">
                 <TextBlock x:Name="TimerText" Text="0" FontSize="20" DockPanel.Dock="Left"/>
                 <TextBlock x:Name="MinesLeft" Text="0" FontSize="20" DockPanel.Dock="Right"/>
-                <Image HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Separator HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
 

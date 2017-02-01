@@ -1,51 +1,105 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace Minesweeper
 {
-	public partial class App : Application
-	{
-		public static MineField Easy
-		{
-			get { return new MineField(9, 9, 10); }
-		}
+    public partial class App : Application
+    {
+        public static bool GameOver
+        {
+            get;
+            private set;
+        }
 
-		public static MineField Medium
-		{
-			get { return new MineField(16, 16, 40); }
-		}
+        public static event Action<DateTime> TimerTick;
+        
+        private static MineField currentField;
+        private static DispatcherTimer timer;
+        private static DateTime startTime;
+        private static bool firstClick;
 
-		public static MineField Hard
-		{
-			get { return new MineField(30, 16, 100); }
-		}
+        // never-changing data initialization
+        public App()
+        {
+            timer = new DispatcherTimer(new TimeSpan(0, 0, 1), DispatcherPriority.Send, (s, e) => TimerTick?.Invoke(startTime), Dispatcher);
+            timer.IsEnabled = false;
+        }
 
-		public static new App Current
-		{
-			get { return (App)Application.Current; }
-		}
+        // returns true if cell was not a mine, false otherwise
+        // if the cell was not a mine, sets neighboringMines
+        //      but, if the cell was already flagged, sets neighboringMines to -1
+        public static bool TryClearCell(int x, int y, ref int neighboringMines)
+        {
+            if (!GameOver)
+            {
+                if (currentField.Clear(x, y))
+                {
+                    if (firstClick)
+                    {
+                        firstClick = false;
 
-		public MineField CurrentGame
-		{
-			get;
-			set;
-		}
+                        // TODO: clear neighbors of adjacent cells with zero neighboring mines
+                    }
 
-		public static T LoadResource<T>(string path, Func<Uri, T> constructor)
-		{
-			var sb = new StringBuilder();
-			sb.Append(@"pack://application:,,,/");
-			sb.Append(ResourceAssembly.GetName().Name);
-			sb.Append(";component/Resources/");
-			sb.Append(path);
+                    if (!currentField[x, y].Flagged)
+                        neighboringMines = currentField[x, y].NeighboringMines;
+                    else
+                        neighboringMines = -1;
 
-			return constructor(new Uri(sb.ToString(), UriKind.Absolute));
-		}
-	}
+                    return true;
+                }
+                else
+                {
+                    timer.Stop();
+                    GameOver = true;
+
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        // returns true if targeted cell is now flagged, false otherwise
+        // assigns flagsLeft to the total number of mines minus the number of flags
+        public static bool ToggleFlagCell(int x, int y, ref int flagsLeft)
+        {
+            if (!GameOver)
+            {
+                bool flagged = currentField.ToggleFlag(x, y);
+
+                flagsLeft = currentField.MineCount - currentField.Flags;
+
+                return flagged;
+            }
+
+            return false;
+        }
+
+        // setup game-specific data
+        public static void StartNewGame(MineField field)
+        {
+            currentField = field;
+
+            GameOver   = false;
+            firstClick = true;
+
+            startTime = DateTime.Now;
+            timer.Start();
+        }
+
+        // WPF library specific resource loading, nothing interesting
+        public static T LoadResource<T>(string path, Func<Uri, T> constructor)
+        {
+            var sb = new StringBuilder();
+            sb.Append(@"pack://application:,,,/");
+            sb.Append(ResourceAssembly.GetName().Name);
+            sb.Append(";component/Resources/");
+            sb.Append(path);
+
+            return constructor(new Uri(sb.ToString(), UriKind.Absolute));
+        }
+    }
 }
