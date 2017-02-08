@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -52,6 +54,7 @@ namespace Minesweeper
                     Grid.SetColumn(lbl, i);
                     Grid.SetRow(lbl, j);
 
+                    // 32x32 cells looks decent
                     lbl.MinWidth  = 32;
                     lbl.MinHeight = 32;
 
@@ -73,22 +76,36 @@ namespace Minesweeper
         // User is attempting to clear a cell
         private void Cell_MouseLeftUp(object sender, MouseButtonEventArgs e)
         {
-            var lbl = (Label)sender;
+            var label = (Label)sender;
 
-            int neighboringMines = 0;
+            List<App.ChangedCell> changedCells = new List<App.ChangedCell>();
 
-            if (App.TryClearCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref neighboringMines))
+            if (App.TryClearCell(Grid.GetColumn(label), Grid.GetRow(label), ref changedCells))
             {
-                // if the cell was already flagged, don't touch it
-                if (neighboringMines != -1)
+                foreach (var cell in changedCells)
                 {
-                    lbl.Content = neighboringMines.ToString();
-                    lbl.Background = CELL_CLEARED_BACKGROUND;
+                    // if the cell was already flagged, don't touch it
+                    if (cell.neighboringMines != App.FLAGGED)
+                    {
+                        label = GetLabelFromCoord(cell.coordinate);
+
+                        // if the cell has no neighboring mines, leave the count blank
+                        label.Content = cell.neighboringMines != 0 ? cell.neighboringMines.ToString() : null;
+                        label.Background = CELL_CLEARED_BACKGROUND;
+                    }
                 }
+
+                if(App.GameWon)
+                    MessageBox.Show("You win!");
             }
             else
             {
-                lbl.Background = mineImage;
+                var mines = App.Mines();
+
+                foreach (var coord in mines)
+                {
+                    GetLabelFromCoord(coord).Background = mineImage;
+                }
 
                 MessageBox.Show("Game Over!");
             }
@@ -104,17 +121,23 @@ namespace Minesweeper
             int flagsLeft = 0;
 
             if (App.ToggleFlagCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref flagsLeft))
-            {
                 lbl.Background = flagImage;
-            }
             else
-            {
                 lbl.Background = CELL_BACKGROUND;
-            }
 
             MinesLeft.Text = flagsLeft.ToString();
-            
+
             e.Handled = true;
+        }
+
+        private Label GetLabelFromCoord(int x, int y)
+        {
+            return MineFieldGrid.Children.OfType<Label>().Where(lbl => Grid.GetColumn(lbl) == x && Grid.GetRow(lbl) == y).First();
+        }
+
+        private Label GetLabelFromCoord(MineField.Coordinate c)
+        {
+            return GetLabelFromCoord(c.x, c.y);
         }
 
         private void GameNewEasy_Click(object sender, RoutedEventArgs e)
