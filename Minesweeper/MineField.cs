@@ -63,35 +63,13 @@ namespace Minesweeper
             // removing coordinates as they are selected
             var possibleCoordinates = new List<Coordinate>(width * height);
 
-            // fill our set of coordinates
-            for (int x = 0; x < width; ++x)
-            {
-                for (int y = 0; y < height; ++y)
-                {
-                    possibleCoordinates.Add(new Coordinate(x, y));
-                }
-            }
+            // TODO: How can we fill the above List with all of the possible coordinates in this MineField?
 
             // we don't want the same minefield the same every time
             Random rand = new Random();
 
-            for (int i = 0; i < mineCount; ++i)
-            {
-                int coordIdx = rand.Next(possibleCoordinates.Count);
-
-                var coord = possibleCoordinates[coordIdx];
-
-                // we don't want to generate this coordinate again
-                possibleCoordinates.RemoveAt(coordIdx);
-
-                // don't recommend stepping foot here
-                cells[coord.x, coord.y].IsMine = true;
-
-                foreach (var c in Neighbors(coord.x, coord.y))
-                {
-                    ++cells[c.x, c.y].NeighboringMines;
-                }
-            }
+            // TODO: How can we select 'mineCount' number of coordinate pairs to be mines?
+            // Remember that we cannot have multiple mines at the same place.
         }
 
         // returns each neighboring Cell to (x, y)
