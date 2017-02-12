@@ -4,9 +4,14 @@ using System.Linq;
 
 namespace Minesweeper
 {
+    /// <summary>
+    /// Represents a grid of <see cref="Cell"/>s, of which a number contain mines.
+    /// </summary>
     public class MineField
     {
-        // convenience struct for passing coordinates around
+        /// <summary>
+        /// Convenience data type for passing coordinates around
+        /// </summary>
         public struct Coordinate
         {
             public Coordinate(int x, int y)
@@ -19,40 +24,67 @@ namespace Minesweeper
             public int y;
         }
 
-        /* provide a couple of presets */
+        /// <summary>
+        /// An "easy" difficulty preset. Consists of a 9x9 grid, containing 10 mines.
+        /// </summary>
         public static MineField Easy
         {
             get { return new MineField(9, 9, 10); }
         }
 
+        /// <summary>
+        /// A "medium" difficulty preset. Consists of a 16x16 grid, containing 40 mines.
+        /// </summary>
         public static MineField Medium
         {
             get { return new MineField(16, 16, 40); }
         }
 
+        /// <summary>
+        /// A "hard" difficulty preset. Consists of a 30x16 grid, containing 100 mines.
+        /// </summary>
         public static MineField Hard
         {
             get { return new MineField(30, 16, 100); }
         }
 
+        /// <summary>
+        /// Two dimensional array representing the grid of <see cref="Cell"/>s
+        /// </summary>
         private Cell[,] cells;
 
+        /// <summary>
+        /// The number of <see cref="Cell"/>s in a row of the <see cref="MineField"/>
+        /// </summary>
         public int Width
         {
             get { return cells.GetLength(0); }
         }
 
+        /// <summary>
+        /// The number of <see cref="Cell"/>s in a column of the <see cref="MineField"/>
+        /// </summary>
         public int Height
         {
             get { return cells.GetLength(1); }
         }
 
+        /// <summary>
+        /// The number of mines in the <see cref="MineField"/>
+        /// </summary>
         public int MineCount
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Creates a <paramref name="width"/>x<paramref name="height"/> grid of <see cref="Cell"/>s,
+        /// and randomly distributes <paramref name="mineCount"/> mines throughout
+        /// </summary>
+        /// <param name="width">The number of <see cref="Cell"/>s per row</param>
+        /// <param name="height">The number of <see cref="Cell"/>s per column</param>
+        /// <param name="mineCount">The number of mines to place in the <see cref="MineField"/></param>
         public MineField(int width, int height, int mineCount)
         {
             cells = new Cell[width, height];
@@ -94,7 +126,13 @@ namespace Minesweeper
             }
         }
 
-        // returns each neighboring Cell to (x, y)
+        /// <summary>
+        /// Provides access to an enumerator for easy iteration over the neighbors of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <remarks>Safely handles out-of-bounds cases, and skips over the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)</remarks>
+        /// <param name="x">The 0-based column number of the <see cref="Cell"/> to find the neighbors of</param>
+        /// <param name="y">The 0-based row number of the <see cref="Cell"/> to find the neighbors of</param>
+        /// <returns>An enumerator for the neighbors of a <see cref="Cell"/></returns>
         public IEnumerable<Coordinate> Neighbors(int x, int y)
         {
             for (int i = Math.Max(0, x - 1); i <= Math.Min(Width - 1, x + 1); ++i)
@@ -109,24 +147,47 @@ namespace Minesweeper
             }
         }
 
+        /// <summary>
+        /// Provides access to an enumerator for easy iteration over the neighbors of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <remarks>Safely handles out-of-bounds cases, and skips over the <see cref="Cell"/> at <paramref name="c"/></remarks>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
+        /// <returns>An enumerator for the neighbors of a <see cref="Cell"/></returns>
         public IEnumerable<Coordinate> Neighbors(Coordinate c)
         {
             return Neighbors(c.x, c.y);
         }
 
+        /// <summary>
+        /// Provides read access to the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <remarks>Provides private write access</remarks>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <returns>The <seealso cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)</returns>
         public Cell this[int x, int y]
         {
             get { return cells[x, y]; }
-            set { cells[x, y] = value; }
+            private set { cells[x, y] = value; }
         }
 
+        /// <summary>
+        /// Provides read access to the <see cref="Cell"/> at <paramref name="c"/>
+        /// </summary>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
+        /// <returns>The <seealso cref="Cell"/> at <paramref name="c"/></returns>
         public Cell this[Coordinate c]
         {
             get { return cells[c.x, c.y]; }
-            set { cells[c.x, c.y] = value; }
+            private set { cells[c.x, c.y] = value; }
         }
 
-        // returns true if safe (not a mine), false if it is a mine
+        /// <summary>
+        /// Attempts to clear the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <returns>true if the <see cref="Cell"/> does not contain a mine, otherwise false</returns>
         public bool Clear(int x, int y)
         {
             if (!cells[x, y].Flagged)
@@ -140,11 +201,23 @@ namespace Minesweeper
             }
         }
 
+        /// <summary>
+        /// Attempts to clear the <see cref="Cell"/> at <paramref name="c"/>
+        /// </summary>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
+        /// <returns>true if the <see cref="Cell"/> does not contain a mine, otherwise false</returns>
         public bool Clear(Coordinate c)
         {
             return Clear(c.x, c.y);
         }
 
+        /// <summary>
+        /// Places or removes a flag on the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <param name="flag">Signifies whether to place (true) or remove (false) a flag at the <see cref="Cell"/></param>
+        /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool Flag(int x, int y, bool flag = true)
         {
             cells[x, y].Flagged = flag;
@@ -152,21 +225,42 @@ namespace Minesweeper
             return flag;
         }
 
+        /// <summary>
+        /// Places or removes a flag on the <see cref="Cell"/> at <paramref name="c"/>
+        /// </summary>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
+        /// <param name="flag">Signifies whether to place (true) or remove (false) a flag at the <see cref="Cell"/></param>
+        /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool Flag(Coordinate c, bool flag = true)
         {
             return Flag(c.x, c.y, flag);
         }
 
+        /// <summary>
+        /// Flips the <see cref="Cell.Flagged"/> value of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool ToggleFlag(int x, int y)
         {
             return Flag(x, y, !cells[x, y].Flagged);
         }
 
+        /// <summary>
+        /// Flips the <see cref="Cell.Flagged"/> value of the <see cref="Cell"/> at <paramref name="c"/>
+        /// </summary>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
+        /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool ToggleFlag(Coordinate c)
         {
             return ToggleFlag(c.x, c.y);
         }
 
+        /// <summary>
+        /// Calculates the number of <see cref="Cell"/>s with a flag
+        /// </summary>
+        /// <returns>The number of flagged <see cref="Cell"/>s</returns>
         public int FlagsPlaced()
         {
             int placed = (from Cell c in cells
@@ -176,7 +270,10 @@ namespace Minesweeper
             return placed;
         }
 
-        // returns the true amount of mines left
+        /// <summary>
+        /// Calculates the number of mined <see cref="Cell"/>s without a flag</code>
+        /// </summary>
+        /// <returns>The number of unflagged <see cref="Cell"/>s containing a mine</returns>
         public int MinesLeft()
         {
             int flaggedMines = (from Cell c in cells
@@ -186,6 +283,10 @@ namespace Minesweeper
             return MineCount - flaggedMines;
         }
 
+        /// <summary>
+        /// Calculates the number of <see cref="Cell"/>s that are either uncleared or unflagged
+        /// </summary>
+        /// <returns>The number of unflagged and uncleared <see cref="Cell"/>s in the <see cref="MineField"/></returns>
         public int CellsLeft()
         {
             int notCleared = (from Cell c in cells

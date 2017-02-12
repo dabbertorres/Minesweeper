@@ -11,13 +11,16 @@ namespace Minesweeper
 {
     public partial class MainWindow : Window
     {
-        /* UI resources */
+        // UI resources
         private readonly SolidColorBrush CELL_BACKGROUND         = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
         private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
         private readonly ImageBrush mineImage = new ImageBrush();
         private readonly ImageBrush flagImage = new ImageBrush();
 
+        /// <summary>
+        /// Loads resources and sets up event callback functions
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -28,6 +31,12 @@ namespace Minesweeper
             App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).Seconds.ToString();
         }
 
+        /// <summary>
+        /// Setup the UI for a new <see cref="MineField"/>
+        /// </summary>
+        /// <param name="width">Width in <see cref="Cell"/>s of the new <see cref="MineField"/></param>
+        /// <param name="height">Height in <see cref="Cell"/>s of the new <see cref="MineField"/></param>
+        /// <param name="mineCount">Number of mines in the new <see cref="MineField"/></param>
         private void SetupMineFieldUI(int width, int height, int mineCount)
         {
             // clear data from previous game
@@ -72,8 +81,12 @@ namespace Minesweeper
 
             MinesLeft.Text = mineCount.ToString();
         }
-
-        // User is attempting to clear a cell
+        
+        /// <summary>
+        /// Called when the user attempts to clear a <see cref="Cell"/>.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Cell_MouseLeftUp(object sender, MouseButtonEventArgs e)
         {
             var label = (Label)sender;
@@ -82,6 +95,7 @@ namespace Minesweeper
 
             if (App.TryClearCell(Grid.GetColumn(label), Grid.GetRow(label), ref changedCells))
             {
+                // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
                     // if the cell was already flagged, don't touch it
@@ -95,13 +109,16 @@ namespace Minesweeper
                     }
                 }
 
+                // User might have won
                 if(App.GameWon)
                     MessageBox.Show("You win!");
             }
             else
             {
+                // RIP
                 var mines = App.Mines();
 
+                // show user where all the mines were
                 foreach (var coord in mines)
                 {
                     GetLabelFromCoord(coord).Background = mineImage;
@@ -112,8 +129,12 @@ namespace Minesweeper
 
             e.Handled = true;
         }
-
-        // User is flagging a cell as a mine
+        
+        /// <summary>
+        /// Called when the user flags a <see cref="Cell"/>
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Cell_MouseRightUp(object sender, MouseButtonEventArgs e)
         {
             var lbl = (Label)sender;
@@ -130,16 +151,34 @@ namespace Minesweeper
             e.Handled = true;
         }
 
+        /// <summary>
+        /// Helper function to get the UI element at (<paramref name="x"/>, <paramref name="y"/>).
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <returns>The <see cref="Label"/> representing the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)</returns>
         private Label GetLabelFromCoord(int x, int y)
         {
-            return MineFieldGrid.Children.OfType<Label>().Where(lbl => Grid.GetColumn(lbl) == x && Grid.GetRow(lbl) == y).First();
+            return (from Label lbl in MineFieldGrid.Children
+                    where Grid.GetColumn(lbl) == x && Grid.GetRow(lbl) == y
+                    select lbl).First();
         }
 
+        /// <summary>
+        /// Overload for <see cref="GetLabelFromCoord(int, int)"/>
+        /// </summary>
+        /// <param name="c">The <see cref="MineField.Coordinate"/> of a <see cref="Cell"/></param>
+        /// <returns></returns>
         private Label GetLabelFromCoord(MineField.Coordinate c)
         {
             return GetLabelFromCoord(c.x, c.y);
         }
 
+        /// <summary>
+        /// Called when the user chooses to start a new easy game
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GameNewEasy_Click(object sender, RoutedEventArgs e)
         {
             var easy = MineField.Easy;
@@ -150,6 +189,11 @@ namespace Minesweeper
             e.Handled = true;
         }
 
+        /// <summary>
+        /// Called when the user chooses to start a new medium game
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GameNewMedium_Click(object sender, RoutedEventArgs e)
         {
             var medium = MineField.Medium;
@@ -160,6 +204,11 @@ namespace Minesweeper
             e.Handled = true;
         }
 
+        /// <summary>
+        /// Called when the user chooses to start a new hard game
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GameNewHard_Click(object sender, RoutedEventArgs e)
         {
             var hard = MineField.Hard;
@@ -170,6 +219,11 @@ namespace Minesweeper
             e.Handled = true;
         }
 
+        /// <summary>
+        /// Called when the user gives up (exits)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GameExit_Click(object sender, RoutedEventArgs e)
         {
             Close();
