@@ -8,6 +8,10 @@ namespace Minesweeper
 {
     public partial class App : Application
     {
+        /// <summary>
+        /// Represents a Cell that had its status changed
+        /// </summary>
+        /// <remarks>Where <see cref="Cell.Flagged"/> or <see cref="Cell.Cleared"/> changed</remarks>
         public struct ChangedCell
         {
             public ChangedCell(MineField.Coordinate coord, int mines)
@@ -20,37 +24,54 @@ namespace Minesweeper
             public int neighboringMines;
         }
 
+        /// <summary>
+        /// Status value indicating a <see cref="Cell"/> is flagged for <see cref="ChangedCell.neighboringMines"/>
+        /// </summary>
         public const int FLAGGED = -1;
 
+        /// <summary>
+        /// Indicates if the player has lost the game
+        /// </summary>
         public static bool GameLost
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Indicates if the player has won the game
+        /// </summary>
         public static bool GameWon
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Provides access to a callback providing the current time, called every second
+        /// </summary>
         public static event Action<DateTime> TimerTick;
 
         private static MineField currentField;
         private static DispatcherTimer timer;
         private static DateTime startTime;
 
-        // never-changing data initialization
+        /// <summary>
+        /// One-time data initialization, since we only ever create one <see cref="App"/> instance!
+        /// </summary>
         public App()
         {
             timer = new DispatcherTimer(new TimeSpan(0, 0, 1), DispatcherPriority.Send, (s, e) => TimerTick?.Invoke(startTime), Dispatcher);
             timer.Stop();
         }
-
-        // returns true if cell was not a mine, false otherwise
-        // fills changedCells with affected cells
-        //     if the cell was not a mine, sets int to the number of neighboring mines
-        //     but, if cell is flagged, sets neighboringMines to -1
+        
+        /// <summary>
+        /// Tries to clear the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>).
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <param name="changedCells">The list of <see cref="Cell"/>s affected by this clear action. Data about changed <see cref="Cell"/>s is provided via <see cref="ChangedCell"/>.</param>
+        /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) is safe to clear (not a mine), false otherwise</returns>
         public static bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
         {
             if (!GameLost && !GameWon)
@@ -83,9 +104,14 @@ namespace Minesweeper
 
             return false;
         }
-
-        // returns true if targeted cell is now flagged, false otherwise
-        // assigns flagsLeft to the total number of mines minus the number of flags
+        
+        /// <summary>
+        /// Toggles the <see cref="Cell.Flagged"/> state of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>).
+        /// </summary>
+        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
+        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <param name="flagsLeft">Assigned to the number of unflagged mines left, assuming all placed flags are correct.</param>
+        /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
         public static bool ToggleFlagCell(int x, int y, ref int flagsLeft)
         {
             if (!GameLost && !GameWon)
@@ -103,6 +129,10 @@ namespace Minesweeper
             return false;
         }
 
+        /// <summary>
+        /// Returns a list of the <see cref="MineField.Coordinate"/>s containing a mine.
+        /// </summary>
+        /// <returns>List of <see cref="MineField.Coordinate"/>s containing a mine</returns>
         public static List<MineField.Coordinate> Mines()
         {
             var mines = new List<MineField.Coordinate>(currentField.MineCount);
@@ -118,8 +148,11 @@ namespace Minesweeper
 
             return mines;
         }
-
-        // setup game-specific data
+        
+        /// <summary>
+        /// Resets game-state data for a new game.
+        /// </summary>
+        /// <param name="field">The <see cref="MineField"/> of the new game.</param>
         public static void StartNewGame(MineField field)
         {
             currentField = field;
@@ -130,8 +163,14 @@ namespace Minesweeper
             startTime = DateTime.Now;
             timer.Start();
         }
-
-        // WPF library specific resource loading, nothing interesting
+        
+        /// <summary>
+        /// Generic wrapper function for simpler WPF resource loading.
+        /// </summary>
+        /// <typeparam name="T">The type of resource to load from <paramref name="path"/></typeparam>
+        /// <param name="path">The pathname of the resource to load</param>
+        /// <param name="constructor">Function wrapping a constructor for <typeparamref name="T"/> that takes a <see cref="Uri"/> as an argument.</param>
+        /// <returns>A new instance of <typeparamref name="T"/> from the resource at <paramref name="path"/>.</returns>
         public static T LoadResource<T>(string path, Func<Uri, T> constructor)
         {
             var sb = new StringBuilder();
@@ -142,10 +181,16 @@ namespace Minesweeper
 
             return constructor(new Uri(sb.ToString(), UriKind.Absolute));
         }
-
-        // if the cell at (x, y) has no neighboring mines, clear all of it's neighbors
-        // if any of those neighbors have no neighboring mines, clear them as well
-        // returns all affected cells
+        
+        /// <summary>
+        /// Clears all adjacent cells with 0 neighboring mines.
+        /// </summary>
+        /// <remarks>
+        /// If the <see cref="Cell"/> at <paramref name="center"/> has 0 neighboring mines, clears all of its neighbors.
+        /// Recurses for each neighbor.
+        /// </remarks>
+        /// <param name="center">The <see cref="MineField.Coordinate"/> to start clearing at.</param>
+        /// <returns>A <see cref="List{ChangedCell}"/> of all cleared <see cref="Cell"/>s.</returns>
         private static List<ChangedCell> ClearLonelyNeighbors(MineField.Coordinate center)
         {
             List<ChangedCell> changedCells = new List<ChangedCell>();
