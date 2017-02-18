@@ -59,13 +59,14 @@ namespace Minesweeper
         public static bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
         {
             var coord = new Coordinate(x, y);
-
+            
             if (currentField.Clear(coord))
             {
-                changedCells.Add(new ChangedCell(coord, !currentField[x, y].Flagged ? currentField[x, y].NeighboringMines : FLAGGED));
+                throw new NotImplementedException();
 
-                if (currentField[coord].NeighboringMines == 0)
-                    changedCells.AddRange(ClearLonelyNeighbors(coord));
+                // TODO What do we do if we a cell is safe to clear?
+                // What if the user tries to clear a cell that is flagged?
+                // Does it affect any neighbors at all? If so, under what condition(s)?
 
                 if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
                 {
@@ -115,8 +116,7 @@ namespace Minesweeper
             {
                 for (int j = 0; j < currentField.Height; ++j)
                 {
-                    if (currentField[i, j].IsMine)
-                        mines.Add(new Coordinate(i, j));
+                    // TODO
                 }
             }
 
@@ -172,15 +172,18 @@ namespace Minesweeper
             foreach (var coord in currentField.Neighbors(center))
             {
                 var cell = currentField[coord];
+                throw new NotImplementedException();
+                // if (coord.x, coord.y) has no mines nearby, recurse to get its neighbors too
 
-                // if (c.x, c.y) has no mines nearby, recurse to get its neighbors too
-                if (!cell.Cleared && !cell.Flagged)
+                // TODO What is/are the condition(s) for a Cell to be cleared?
+                //if ()
                 {
                     currentField.Clear(coord);
 
-                    changedCells.Add(new ChangedCell(coord, cell.NeighboringMines));
+                    changedCells.Add(new ChangedCell(/* TODO */));
 
-                    if (cell.NeighboringMines == 0)
+                    // TODO What is/are the condition(s) to clear the neighbors of the neighbor at coord?
+                    //if ()
                         changedCells.AddRange(ClearLonelyNeighbors(coord));
                 }
             }

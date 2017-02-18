@@ -110,13 +110,13 @@ namespace Minesweeper
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
-                    // if the cell was already flagged, don't touch it
-                    if (cell.neighboringMines != App.FLAGGED)
+                    // TODO When do we NOT want to change a Cell?
+                    //if ()
                     {
-                        label = GetLabelFromCoord(cell.coordinate);
+                        // TODO How do we get the UI element at a specific coordinate?
 
                         // if the cell has no neighboring mines, leave the count blank
-                        label.Content = cell.neighboringMines != 0 ? cell.neighboringMines.ToString() : null;
+                        label.Content = null /* TODO What do we want to say here? */;
                         label.Background = CELL_CLEARED_BACKGROUND;
                     }
                 }

@@ -153,15 +153,7 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> does not contain a mine, otherwise false</returns>
         public bool Clear(int x, int y)
         {
-            if (!cells[x, y].Flagged)
-            {
-                cells[x, y].Cleared = true;
-                return !cells[x, y].IsMine;
-            }
-            else
-            {
-                return true;
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -183,9 +175,7 @@ namespace Minesweeper
         /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool Flag(int x, int y, bool flag = true)
         {
-            cells[x, y].Flagged = flag;
-
-            return flag;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -207,7 +197,7 @@ namespace Minesweeper
         /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool ToggleFlag(int x, int y)
         {
-            return Flag(x, y, !cells[x, y].Flagged);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -226,11 +216,12 @@ namespace Minesweeper
         /// <returns>The number of flagged <see cref="Cell"/>s</returns>
         public int FlagsPlaced()
         {
-            int placed = (from Cell c in cells
-                          where c.Flagged
-                          select c).Count();
+            //int placed = (from Cell c in cells
+            //              where c.Flagged
+            //              select c).Count();
 
-            return placed;
+            //return placed;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -239,11 +230,12 @@ namespace Minesweeper
         /// <returns>The number of unflagged <see cref="Cell"/>s containing a mine</returns>
         public int MinesLeft()
         {
-            int flaggedMines = (from Cell c in cells
-                                where c.Flagged && c.IsMine
-                                select c).Count();
+            //int flaggedMines = (from Cell c in cells
+            //                    where c.Flagged && c.IsMine
+            //                    select c).Count();
 
-            return MineCount - flaggedMines;
+            //return MineCount - flaggedMines;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -252,11 +244,12 @@ namespace Minesweeper
         /// <returns>The number of unflagged and uncleared <see cref="Cell"/>s in the <see cref="MineField"/></returns>
         public int CellsLeft()
         {
-            int notCleared = (from Cell c in cells
-                              where !c.Cleared && !c.Flagged
-                              select c).Count();
+            //int notCleared = (from Cell c in cells
+            //                  where !c.Cleared && !c.Flagged
+            //                  select c).Count();
 
-            return notCleared;
+            //return notCleared;
+            throw new NotImplementedException();
         }
     }
 }
