@@ -9,30 +9,18 @@ namespace Minesweeper
     public partial class App : Application
     {
         /// <summary>
-        /// Status value indicating a <see cref="Cell"/> is flagged for <see cref="ChangedCell.neighboringMines"/>
+        /// Function type for when the current game ends
         /// </summary>
-        public const int FLAGGED = -1;
+        /// <param name="won">true if user won, false if user lost</param>
+        public delegate void GameEndCallback(bool won);
 
         /// <summary>
-        /// Indicates if the player has lost the game
+        /// Provides access to a event when the game ends. 
         /// </summary>
-        public static bool GameLost
-        {
-            get;
-            private set;
-        }
+        public static event GameEndCallback GameEnd;
 
         /// <summary>
-        /// Indicates if the player has won the game
-        /// </summary>
-        public static bool GameWon
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Provides access to a callback providing the current time, called every second
+        /// Provides access to a event providing the current time, called every second
         /// </summary>
         public static event Action<DateTime> TimerTick;
 
@@ -62,23 +50,24 @@ namespace Minesweeper
 
             if (currentField.Clear(coord))
             {
-                changedCells.Add(new ChangedCell(coord, !currentField[x, y].Flagged ? currentField[x, y].NeighboringMines : FLAGGED));
+                var cell = currentField[coord];
 
-                if (currentField[coord].NeighboringMines == 0)
-                    changedCells.AddRange(ClearLonelyNeighbors(coord));
-
-                if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
+                if (!cell.Flagged)
                 {
-                    timer.Stop();
-                    GameWon = true;
+                    changedCells.Add(new ChangedCell(coord, cell.NeighboringMines));
+
+                    if (cell.NeighboringMines == 0)
+                        changedCells.AddRange(ClearLonelyNeighbors(coord));
                 }
+
+                CheckGameWon();
 
                 return true;
             }
             else
             {
                 timer.Stop();
-                GameLost = true;
+                GameEnd?.Invoke(false);
 
                 return false;
             }
@@ -89,16 +78,22 @@ namespace Minesweeper
         /// </summary>
         /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
         /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
+        /// <param name="cleared">Assigned to true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) is already cleared</param>
         /// <param name="flagsLeft">Assigned to the number of unflagged mines left, assuming all placed flags are correct.</param>
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
-        public static bool ToggleFlagCell(int x, int y, ref int flagsLeft)
+        public static bool ToggleFlagCell(int x, int y, ref bool cleared, ref int flagsLeft)
         {
             if (currentField[x, y].Cleared)
+            {
+                cleared = true;
                 return false;
+            }
 
             bool flagged = currentField.ToggleFlag(x, y);
 
             flagsLeft = currentField.MineCount - currentField.FlagsPlaced();
+
+            CheckGameWon();
 
             return flagged;
         }
@@ -131,11 +126,23 @@ namespace Minesweeper
         {
             currentField = field;
 
-            GameLost = false;
-            GameWon  = false;
-
             startTime = DateTime.Now;
             timer.Start();
+        }
+
+        /// <summary>
+        /// Checks if the current field has been correctly cleared. Stops timer and sets <see cref="GameWon"/> if so
+        /// </summary>
+        /// <remarks>
+        /// Checks if <see cref="currentField"/>'s <see cref="MineField.MinesLeft()"/> == 0 and <see cref="currentField"/>'s <see cref="MineField.CellsLeft()"/> == 0
+        /// </remarks>
+        public static void CheckGameWon()
+        {
+            if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
+            {
+                timer.Stop();
+                GameEnd?.Invoke(true);
+            }
         }
 
         /// <summary>

@@ -28,7 +28,8 @@ namespace Minesweeper
             mineImage.ImageSource = App.LoadResource("mine.png", u => new BitmapImage(u));
             flagImage.ImageSource = App.LoadResource("flag.png", u => new BitmapImage(u));
 
-            App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).Seconds.ToString();
+            App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).TotalSeconds.ToString();
+            App.GameEnd   += StopGame;
         }
 
         /// <summary>
@@ -85,12 +86,29 @@ namespace Minesweeper
         /// <summary>
         /// Detach callbacks from events to prevent the user from modifying the field after winning/losing
         /// </summary>
-        private void StopGame()
+        private void StopGame(bool won)
         {
             foreach (UIElement lbl in MineFieldGrid.Children)
             {
-                lbl.MouseLeftButtonUp -= Cell_MouseLeftUp;
+                lbl.MouseLeftButtonUp  -= Cell_MouseLeftUp;
                 lbl.MouseRightButtonUp -= Cell_MouseRightUp;
+            }
+
+            if (won)
+            {
+                MessageBox.Show("You win!");
+            }
+            else
+            {
+                MessageBox.Show("Game Over!");
+
+                var mines = App.Mines();
+
+                // show user where all the mines were
+                foreach (var coord in mines)
+                {
+                    GetLabelFromCoord(coord).Background = mineImage;
+                }
             }
         }
 
@@ -110,37 +128,16 @@ namespace Minesweeper
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
-                    // if the cell was already flagged, don't touch it
-                    if (cell.neighboringMines != App.FLAGGED)
-                    {
-                        label = GetLabelFromCoord(cell.coordinate);
+                    label = GetLabelFromCoord(cell.coordinate);
 
-                        // if the cell has no neighboring mines, leave the count blank
-                        label.Content = cell.neighboringMines != 0 ? cell.neighboringMines.ToString() : null;
-                        label.Background = CELL_CLEARED_BACKGROUND;
-                    }
-                }
-
-                // User might have won
-                if (App.GameWon)
-                {
-                    StopGame();
-                    MessageBox.Show("You win!");
+                    // if the cell has no neighboring mines, leave the count blank
+                    label.Content = cell.neighboringMines != 0 ? cell.neighboringMines.ToString() : null;
+                    label.Background = CELL_CLEARED_BACKGROUND;
                 }
             }
             else
             {
                 // RIP
-                var mines = App.Mines();
-
-                // show user where all the mines were
-                foreach (var coord in mines)
-                {
-                    GetLabelFromCoord(coord).Background = mineImage;
-                }
-
-                StopGame();
-                MessageBox.Show("Game Over!");
             }
 
             e.Handled = true;
@@ -155,11 +152,16 @@ namespace Minesweeper
         {
             var lbl = (Label)sender;
 
+            int x = Grid.GetColumn(lbl);
+            int y = Grid.GetRow(lbl);
+
             int flagsLeft = 0;
 
-            if (App.ToggleFlagCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref flagsLeft))
+            bool cleared = false;
+
+            if (App.ToggleFlagCell(x, y, ref cleared, ref flagsLeft))
                 lbl.Background = flagImage;
-            else
+            else if (!cleared)
                 lbl.Background = CELL_BACKGROUND;
 
             MinesLeft.Text = flagsLeft.ToString();
