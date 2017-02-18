@@ -37,7 +37,7 @@ namespace Minesweeper
         /// <param name="width">Width in <see cref="Cell"/>s of the new <see cref="MineField"/></param>
         /// <param name="height">Height in <see cref="Cell"/>s of the new <see cref="MineField"/></param>
         /// <param name="mineCount">Number of mines in the new <see cref="MineField"/></param>
-        private void SetupMineFieldUI(int width, int height, int mineCount)
+        private void StartNewGame(int width, int height, int mineCount)
         {
             // clear data from previous game
             MineFieldGrid.Children.Clear();
@@ -81,7 +81,19 @@ namespace Minesweeper
 
             MinesLeft.Text = mineCount.ToString();
         }
-        
+
+        /// <summary>
+        /// Detach callbacks from events to prevent the user from modifying the field after winning/losing
+        /// </summary>
+        private void StopGame()
+        {
+            foreach (UIElement lbl in MineFieldGrid.Children)
+            {
+                lbl.MouseLeftButtonUp -= Cell_MouseLeftUp;
+                lbl.MouseRightButtonUp -= Cell_MouseRightUp;
+            }
+        }
+
         /// <summary>
         /// Called when the user attempts to clear a <see cref="Cell"/>.
         /// </summary>
@@ -110,8 +122,11 @@ namespace Minesweeper
                 }
 
                 // User might have won
-                if(App.GameWon)
+                if (App.GameWon)
+                {
+                    StopGame();
                     MessageBox.Show("You win!");
+                }
             }
             else
             {
@@ -124,12 +139,13 @@ namespace Minesweeper
                     GetLabelFromCoord(coord).Background = mineImage;
                 }
 
+                StopGame();
                 MessageBox.Show("Game Over!");
             }
 
             e.Handled = true;
         }
-        
+
         /// <summary>
         /// Called when the user flags a <see cref="Cell"/>
         /// </summary>
@@ -183,7 +199,7 @@ namespace Minesweeper
         {
             var easy = MineField.Easy;
 
-            SetupMineFieldUI(easy.Width, easy.Height, easy.MineCount);
+            StartNewGame(easy.Width, easy.Height, easy.MineCount);
             App.StartNewGame(easy);
 
             e.Handled = true;
@@ -198,7 +214,7 @@ namespace Minesweeper
         {
             var medium = MineField.Medium;
 
-            SetupMineFieldUI(medium.Width, medium.Height, medium.MineCount);
+            StartNewGame(medium.Width, medium.Height, medium.MineCount);
             App.StartNewGame(medium);
 
             e.Handled = true;
@@ -213,7 +229,7 @@ namespace Minesweeper
         {
             var hard = MineField.Hard;
 
-            SetupMineFieldUI(hard.Width, hard.Height, hard.MineCount);
+            StartNewGame(hard.Width, hard.Height, hard.MineCount);
             App.StartNewGame(hard);
 
             e.Handled = true;
