@@ -9,22 +9,6 @@ namespace Minesweeper
     public partial class App : Application
     {
         /// <summary>
-        /// Represents a Cell that had its status changed
-        /// </summary>
-        /// <remarks>Where <see cref="Cell.Flagged"/> or <see cref="Cell.Cleared"/> changed</remarks>
-        public struct ChangedCell
-        {
-            public ChangedCell(MineField.Coordinate coord, int mines)
-            {
-                coordinate = coord;
-                neighboringMines = mines;
-            }
-
-            public MineField.Coordinate coordinate;
-            public int neighboringMines;
-        }
-
-        /// <summary>
         /// Status value indicating a <see cref="Cell"/> is flagged for <see cref="ChangedCell.neighboringMines"/>
         /// </summary>
         public const int FLAGGED = -1;
@@ -76,7 +60,7 @@ namespace Minesweeper
         {
             if (!GameLost && !GameWon)
             {
-                var coord = new MineField.Coordinate(x, y);
+                var coord = new Coordinate(x, y);
 
                 if (currentField.Clear(coord))
                 {
@@ -130,19 +114,19 @@ namespace Minesweeper
         }
 
         /// <summary>
-        /// Returns a list of the <see cref="MineField.Coordinate"/>s containing a mine.
+        /// Returns a list of the <see cref="Coordinate"/>s containing a mine.
         /// </summary>
-        /// <returns>List of <see cref="MineField.Coordinate"/>s containing a mine</returns>
-        public static List<MineField.Coordinate> Mines()
+        /// <returns>List of <see cref="Coordinate"/>s containing a mine</returns>
+        public static List<Coordinate> Mines()
         {
-            var mines = new List<MineField.Coordinate>(currentField.MineCount);
+            var mines = new List<Coordinate>(currentField.MineCount);
 
             for (int i = 0; i < currentField.Width; ++i)
             {
                 for (int j = 0; j < currentField.Height; ++j)
                 {
                     if (currentField[i, j].IsMine)
-                        mines.Add(new MineField.Coordinate(i, j));
+                        mines.Add(new Coordinate(i, j));
                 }
             }
 
@@ -189,9 +173,9 @@ namespace Minesweeper
         /// If the <see cref="Cell"/> at <paramref name="center"/> has 0 neighboring mines, clears all of its neighbors.
         /// Recurses for each neighbor.
         /// </remarks>
-        /// <param name="center">The <see cref="MineField.Coordinate"/> to start clearing at.</param>
+        /// <param name="center">The <see cref="Coordinate"/> to start clearing at.</param>
         /// <returns>A <see cref="List{ChangedCell}"/> of all cleared <see cref="Cell"/>s.</returns>
-        private static List<ChangedCell> ClearLonelyNeighbors(MineField.Coordinate center)
+        private static List<ChangedCell> ClearLonelyNeighbors(Coordinate center)
         {
             List<ChangedCell> changedCells = new List<ChangedCell>();
 
