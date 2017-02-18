@@ -48,7 +48,7 @@ namespace Minesweeper
             timer = new DispatcherTimer(new TimeSpan(0, 0, 1), DispatcherPriority.Send, (s, e) => TimerTick?.Invoke(startTime), Dispatcher);
             timer.Stop();
         }
-        
+
         /// <summary>
         /// Tries to clear the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>).
         /// </summary>
@@ -58,37 +58,32 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) is safe to clear (not a mine), false otherwise</returns>
         public static bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
         {
-            if (!GameLost && !GameWon)
+            var coord = new Coordinate(x, y);
+
+            if (currentField.Clear(coord))
             {
-                var coord = new Coordinate(x, y);
+                changedCells.Add(new ChangedCell(coord, !currentField[x, y].Flagged ? currentField[x, y].NeighboringMines : FLAGGED));
 
-                if (currentField.Clear(coord))
-                {
-                    changedCells.Add(new ChangedCell(coord, !currentField[x, y].Flagged ? currentField[x, y].NeighboringMines : FLAGGED));
+                if (currentField[coord].NeighboringMines == 0)
+                    changedCells.AddRange(ClearLonelyNeighbors(coord));
 
-                    if (currentField[coord].NeighboringMines == 0)
-                        changedCells.AddRange(ClearLonelyNeighbors(coord));
-
-                    if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
-                    {
-                        timer.Stop();
-                        GameWon = true;
-                    }
-
-                    return true;
-                }
-                else
+                if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
                 {
                     timer.Stop();
-                    GameLost = true;
-
-                    return false;
+                    GameWon = true;
                 }
-            }
 
-            return false;
+                return true;
+            }
+            else
+            {
+                timer.Stop();
+                GameLost = true;
+
+                return false;
+            }
         }
-        
+
         /// <summary>
         /// Toggles the <see cref="Cell.Flagged"/> state of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>).
         /// </summary>
@@ -98,19 +93,14 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
         public static bool ToggleFlagCell(int x, int y, ref int flagsLeft)
         {
-            if (!GameLost && !GameWon)
-            {
-                if (currentField[x, y].Cleared)
-                    return false;
+            if (currentField[x, y].Cleared)
+                return false;
 
-                bool flagged = currentField.ToggleFlag(x, y);
+            bool flagged = currentField.ToggleFlag(x, y);
 
-                flagsLeft = currentField.MineCount - currentField.FlagsPlaced();
+            flagsLeft = currentField.MineCount - currentField.FlagsPlaced();
 
-                return flagged;
-            }
-
-            return false;
+            return flagged;
         }
 
         /// <summary>
@@ -132,7 +122,7 @@ namespace Minesweeper
 
             return mines;
         }
-        
+
         /// <summary>
         /// Resets game-state data for a new game.
         /// </summary>
@@ -147,7 +137,7 @@ namespace Minesweeper
             startTime = DateTime.Now;
             timer.Start();
         }
-        
+
         /// <summary>
         /// Generic wrapper function for simpler WPF resource loading.
         /// </summary>
@@ -165,7 +155,7 @@ namespace Minesweeper
 
             return constructor(new Uri(sb.ToString(), UriKind.Absolute));
         }
-        
+
         /// <summary>
         /// Clears all adjacent cells with 0 neighboring mines.
         /// </summary>
