@@ -10,21 +10,6 @@ namespace Minesweeper
     public class MineField
     {
         /// <summary>
-        /// Convenience data type for passing coordinates around
-        /// </summary>
-        public struct Coordinate
-        {
-            public Coordinate(int x, int y)
-            {
-                this.x = x;
-                this.y = y;
-            }
-
-            public int x;
-            public int y;
-        }
-
-        /// <summary>
         /// An "easy" difficulty preset. Consists of a 9x9 grid, containing 10 mines.
         /// </summary>
         public static MineField Easy

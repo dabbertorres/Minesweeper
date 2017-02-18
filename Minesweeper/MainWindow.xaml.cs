@@ -91,7 +91,7 @@ namespace Minesweeper
         {
             var label = (Label)sender;
 
-            List<App.ChangedCell> changedCells = new List<App.ChangedCell>();
+            var changedCells = new List<ChangedCell>();
 
             if (App.TryClearCell(Grid.GetColumn(label), Grid.GetRow(label), ref changedCells))
             {
@@ -167,9 +167,9 @@ namespace Minesweeper
         /// <summary>
         /// Overload for <see cref="GetLabelFromCoord(int, int)"/>
         /// </summary>
-        /// <param name="c">The <see cref="MineField.Coordinate"/> of a <see cref="Cell"/></param>
+        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
         /// <returns></returns>
-        private Label GetLabelFromCoord(MineField.Coordinate c)
+        private Label GetLabelFromCoord(Coordinate c)
         {
             return GetLabelFromCoord(c.x, c.y);
         }
