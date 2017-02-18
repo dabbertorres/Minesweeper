@@ -160,6 +160,7 @@ namespace Minesweeper
             int flaggedMines = (from Cell c in cells
                                 where c.Flagged && c.IsMine
                                 select c).Count();
+
             return MineCount - flaggedMines;
         }
 
