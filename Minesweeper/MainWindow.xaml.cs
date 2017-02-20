@@ -25,8 +25,8 @@ namespace Minesweeper
         {
             InitializeComponent();
 
-            mineImage.ImageSource = App.LoadResource("mine.png", u => new BitmapImage(u));
-            flagImage.ImageSource = App.LoadResource("flag.png", u => new BitmapImage(u));
+            mineImage.ImageSource = App.LoadResource("mine.png", uri => new BitmapImage(uri));
+            flagImage.ImageSource = App.LoadResource("flag.png", uri => new BitmapImage(uri));
 
             App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).TotalSeconds.ToString();
             App.GameEnd   += StopGame;
@@ -96,19 +96,13 @@ namespace Minesweeper
 
             if (won)
             {
-                MessageBox.Show("You win!");
+                // TODO How should we let the player know they won?
+                throw new NotImplementedException();
             }
             else
             {
-                MessageBox.Show("Game Over!");
-
-                var mines = App.Mines();
-
-                // show user where all the mines were
-                foreach (var coord in mines)
-                {
-                    GetLabelFromCoord(coord).Background = mineImage;
-                }
+                // TODO How should we let the player know they lost?
+                throw new NotImplementedException();
             }
         }
 
@@ -122,12 +116,13 @@ namespace Minesweeper
             var label = (Label)sender;
 
             var changedCells = new List<ChangedCell>();
-
+            
             if (App.TryClearCell(Grid.GetColumn(label), Grid.GetRow(label), ref changedCells))
             {
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
+                    throw new NotImplementedException();
                     // TODO When do we NOT want to change a Cell?
                     //if ()
                     {
@@ -142,6 +137,7 @@ namespace Minesweeper
             else
             {
                 // RIP
+                // TODO Why do we not need to do anything here?
             }
 
             e.Handled = true;

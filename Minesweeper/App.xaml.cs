@@ -100,13 +100,7 @@ namespace Minesweeper
         {
             var mines = new List<Coordinate>(currentField.MineCount);
 
-            for (int i = 0; i < currentField.Width; ++i)
-            {
-                for (int j = 0; j < currentField.Height; ++j)
-                {
-                    // TODO
-                }
-            }
+            // TODO How can we get the coordinate of every Cell containing a mine?
 
             return mines;
         }

@@ -11,6 +11,7 @@ namespace Minesweeper
     {
         /// <summary>
         /// An "easy" difficulty preset. Consists of a 9x9 grid, containing 10 mines.
+        /// Mine density of 1 mine per 8.1 cells
         /// </summary>
         public static MineField Easy
         {
@@ -19,6 +20,7 @@ namespace Minesweeper
 
         /// <summary>
         /// A "medium" difficulty preset. Consists of a 16x16 grid, containing 40 mines.
+        /// Mine density of 1 mine per 6.4 cells
         /// </summary>
         public static MineField Medium
         {
@@ -27,6 +29,7 @@ namespace Minesweeper
 
         /// <summary>
         /// A "hard" difficulty preset. Consists of a 30x16 grid, containing 100 mines.
+        /// Mine density of 1 ine per 4.8 cells
         /// </summary>
         public static MineField Hard
         {
@@ -153,6 +156,7 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> does not contain a mine, otherwise false</returns>
         public bool Clear(int x, int y)
         {
+            // TODO How can we clear a Cell? What if the Cell contains a mine?
             throw new NotImplementedException();
         }
 
@@ -167,29 +171,6 @@ namespace Minesweeper
         }
 
         /// <summary>
-        /// Places or removes a flag on the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
-        /// </summary>
-        /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
-        /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
-        /// <param name="flag">Signifies whether to place (true) or remove (false) a flag at the <see cref="Cell"/></param>
-        /// <returns>The new flag status of the <see cref="Cell"/></returns>
-        public bool Flag(int x, int y, bool flag = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Places or removes a flag on the <see cref="Cell"/> at <paramref name="c"/>
-        /// </summary>
-        /// <param name="c">The <see cref="Coordinate"/> of a <see cref="Cell"/></param>
-        /// <param name="flag">Signifies whether to place (true) or remove (false) a flag at the <see cref="Cell"/></param>
-        /// <returns>The new flag status of the <see cref="Cell"/></returns>
-        public bool Flag(Coordinate c, bool flag = true)
-        {
-            return Flag(c.x, c.y, flag);
-        }
-
-        /// <summary>
         /// Flips the <see cref="Cell.Flagged"/> value of the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>)
         /// </summary>
         /// <param name="x">The 0-based column number of a <see cref="Cell"/></param>
@@ -197,6 +178,7 @@ namespace Minesweeper
         /// <returns>The new flag status of the <see cref="Cell"/></returns>
         public bool ToggleFlag(int x, int y)
         {
+            // TODO How can we toggle the flagged status of a Cell?
             throw new NotImplementedException();
         }
 
@@ -216,12 +198,27 @@ namespace Minesweeper
         /// <returns>The number of flagged <see cref="Cell"/>s</returns>
         public int FlagsPlaced()
         {
-            //int placed = (from Cell c in cells
-            //              where c.Flagged
-            //              select c).Count();
+            int placedFlags = 0;
 
-            //return placed;
+            // TODO Which version do we like better?
+            // They have the same result (toggle the 'false' to 'true' and vice versa)
             throw new NotImplementedException();
+#if false
+            placedFlags = (from Cell c in cells
+                           where c.Flagged
+                           select c).Count();
+#else
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    var c = cells[i, j];
+                    //if (c.Flagged)
+                    //    ++placedFlags;
+                }
+            }
+#endif
+            return placedFlags;
         }
 
         /// <summary>
@@ -230,12 +227,27 @@ namespace Minesweeper
         /// <returns>The number of unflagged <see cref="Cell"/>s containing a mine</returns>
         public int MinesLeft()
         {
-            //int flaggedMines = (from Cell c in cells
-            //                    where c.Flagged && c.IsMine
-            //                    select c).Count();
+            int flaggedMines = 0;
 
-            //return MineCount - flaggedMines;
+            // TODO Which version do we like better?
+            // They have the same result (toggle the 'false' to 'true' and vice versa)
             throw new NotImplementedException();
+#if false
+            flaggedMines = (from Cell c in cells
+                            where c.Flagged && c.IsMine
+                            select c).Count();
+#else
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    var c = cells[i, j];
+                    //if (c.Flagged && c.IsMine)
+                    //    ++flaggedMines;
+                }
+            }
+#endif
+            return MineCount - flaggedMines;
         }
 
         /// <summary>
@@ -244,12 +256,27 @@ namespace Minesweeper
         /// <returns>The number of unflagged and uncleared <see cref="Cell"/>s in the <see cref="MineField"/></returns>
         public int CellsLeft()
         {
-            //int notCleared = (from Cell c in cells
-            //                  where !c.Cleared && !c.Flagged
-            //                  select c).Count();
+            int notCleared = 0;
 
-            //return notCleared;
+            // TODO Which version do we like better?
+            // They have the same result (toggle the 'false' to 'true' and vice versa)
             throw new NotImplementedException();
+#if false
+            notCleared = (from Cell c in cells
+                          where !c.Cleared && !c.Flagged
+                          select c).Count();
+#else
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    var c = cells[i, j];
+                    //if (!c.Cleared && !c.Flagged)
+                    //    ++notCleared;
+                }
+            }
+#endif
+            return notCleared;
         }
     }
 }
