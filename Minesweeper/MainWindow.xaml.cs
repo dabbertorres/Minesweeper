@@ -15,8 +15,12 @@ namespace Minesweeper
         private readonly SolidColorBrush CELL_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
         private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
-        private readonly ImageBrush mineImage = new ImageBrush();
-        private readonly ImageBrush flagImage = new ImageBrush();
+        private readonly ImageBrush mineImage = new ImageBrush(App.LoadResource("mine.png", u => new BitmapImage(u)));
+        private readonly ImageBrush flagImage = new ImageBrush(App.LoadResource("flag.png", u => new BitmapImage(u)));
+        private readonly ImageBrush happyImage = new ImageBrush(App.LoadResource("happy.png", u => new BitmapImage(u)));
+        private readonly ImageBrush scaredImage = new ImageBrush(App.LoadResource("scared.png", u => new BitmapImage(u)));
+        private readonly ImageBrush coolImage = new ImageBrush(App.LoadResource("cool.png", u => new BitmapImage(u)));
+        private readonly ImageBrush deadImage = new ImageBrush(App.LoadResource("dead.png", u => new BitmapImage(u)));
 
         /// <summary>
         /// Loads resources and sets up event callback functions
@@ -25,11 +29,24 @@ namespace Minesweeper
         {
             InitializeComponent();
 
-            mineImage.ImageSource = App.LoadResource("mine.png", u => new BitmapImage(u));
-            flagImage.ImageSource = App.LoadResource("flag.png", u => new BitmapImage(u));
+            mineImage.Stretch = Stretch.Uniform;
+            flagImage.Stretch = Stretch.Uniform;
+            happyImage.Stretch = Stretch.Uniform;
+            scaredImage.Stretch = Stretch.Uniform;
+            coolImage.Stretch = Stretch.Uniform;
+            deadImage.Stretch = Stretch.Uniform;
 
             App.TimerTick += startTime => TimerText.Text = ((int)(DateTime.Now - startTime).TotalSeconds).ToString();
             App.GameEnd += StopGame;
+            
+            statusImage.Background = happyImage;
+
+            // if the user wants to cancel a mouse press by letting go after moving off the grid,
+            // we need to change the status image back to happy (so it's not stuck on scared until the next press)
+            MouseLeftButtonUp += (s, e) => { statusImage.Background = happyImage; };
+
+            // above isn't called if the mouse left the window
+            MouseLeave += (s, e) => { statusImage.Background = happyImage; };
         }
 
         /// <summary>
@@ -73,6 +90,8 @@ namespace Minesweeper
                     lbl.HorizontalContentAlignment = HorizontalAlignment.Center;
                     lbl.VerticalContentAlignment = VerticalAlignment.Center;
 
+                    lbl.MouseLeftButtonDown += Cell_MouseLeftDown;
+
                     lbl.MouseLeftButtonUp += Cell_MouseLeftUp;
                     lbl.MouseRightButtonUp += Cell_MouseRightUp;
 
@@ -81,6 +100,7 @@ namespace Minesweeper
             }
 
             MinesLeft.Text = mineCount.ToString();
+            statusImage.Background = happyImage;
         }
 
         /// <summary>
@@ -96,10 +116,12 @@ namespace Minesweeper
 
             if (won)
             {
+                statusImage.Background = coolImage;
                 MessageBox.Show("You win!");
             }
             else
             {
+                statusImage.Background = deadImage;
                 MessageBox.Show("Game Over!");
 
                 var mines = App.Mines();
@@ -110,6 +132,16 @@ namespace Minesweeper
                     GetLabelFromCoord(coord).Background = mineImage;
                 }
             }
+        }
+
+        /// <summary>
+        /// Called when the user presses down on the mouse but before releasing.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Cell_MouseLeftDown(object sender, RoutedEventArgs e)
+        {
+            statusImage.Background = scaredImage; 
         }
 
         /// <summary>
@@ -134,6 +166,8 @@ namespace Minesweeper
                     lbl.Content = cell.neighboringMines != 0 ? cell.neighboringMines.ToString() : null;
                     lbl.Background = CELL_CLEARED_BACKGROUND;
                 }
+                
+                statusImage.Background = happyImage;
             }
             else
             {

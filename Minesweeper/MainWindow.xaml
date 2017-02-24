@@ -28,11 +28,17 @@
             <Border.BorderBrush>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ActiveBorderColorKey}}"/>
             </Border.BorderBrush>
-            <DockPanel Margin="5">
-                <TextBlock x:Name="TimerText" Text="0" FontSize="20" DockPanel.Dock="Left"/>
-                <TextBlock x:Name="MinesLeft" Text="0" FontSize="20" DockPanel.Dock="Right"/>
-                <Separator HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </DockPanel>
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock x:Name="TimerText" Text="0" FontSize="20" Grid.Column="0" HorizontalAlignment="Left"/>
+                <Label x:Name="statusImage" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <TextBlock x:Name="MinesLeft" Text="0" FontSize="20" Grid.Column="2" HorizontalAlignment="Right"/>
+            </Grid>
         </Border>
 
         <Grid x:Name="MineFieldGrid" ShowGridLines="True" Margin="5"/>
