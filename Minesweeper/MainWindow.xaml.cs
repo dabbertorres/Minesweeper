@@ -12,7 +12,7 @@ namespace Minesweeper
     public partial class MainWindow : Window
     {
         // UI resources
-        private readonly SolidColorBrush CELL_BACKGROUND         = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
+        private readonly SolidColorBrush CELL_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
         private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
         private readonly ImageBrush mineImage = new ImageBrush();
@@ -28,8 +28,8 @@ namespace Minesweeper
             mineImage.ImageSource = App.LoadResource("mine.png", uri => new BitmapImage(uri));
             flagImage.ImageSource = App.LoadResource("flag.png", uri => new BitmapImage(uri));
 
-            App.TimerTick += startTime => TimerText.Text = (DateTime.Now - startTime).TotalSeconds.ToString();
-            App.GameEnd   += StopGame;
+            App.TimerTick += startTime => TimerText.Text = ((int)(DateTime.Now - startTime).TotalSeconds).ToString();
+            App.GameEnd += StopGame;
         }
 
         /// <summary>
@@ -65,15 +65,15 @@ namespace Minesweeper
                     Grid.SetRow(lbl, j);
 
                     // 32x32 cells looks decent
-                    lbl.MinWidth  = 32;
+                    lbl.MinWidth = 32;
                     lbl.MinHeight = 32;
 
                     lbl.Background = CELL_BACKGROUND;
 
                     lbl.HorizontalContentAlignment = HorizontalAlignment.Center;
-                    lbl.VerticalContentAlignment   = VerticalAlignment.Center;
+                    lbl.VerticalContentAlignment = VerticalAlignment.Center;
 
-                    lbl.MouseLeftButtonUp  += Cell_MouseLeftUp;
+                    lbl.MouseLeftButtonUp += Cell_MouseLeftUp;
                     lbl.MouseRightButtonUp += Cell_MouseRightUp;
 
                     MineFieldGrid.Children.Add(lbl);
@@ -88,9 +88,9 @@ namespace Minesweeper
         /// </summary>
         private void StopGame(bool won)
         {
-            foreach (UIElement lbl in MineFieldGrid.Children)
+            foreach (Label lbl in MineFieldGrid.Children)
             {
-                lbl.MouseLeftButtonUp  -= Cell_MouseLeftUp;
+                lbl.MouseLeftButtonUp -= Cell_MouseLeftUp;
                 lbl.MouseRightButtonUp -= Cell_MouseRightUp;
             }
 
@@ -111,13 +111,13 @@ namespace Minesweeper
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Cell_MouseLeftUp(object sender, MouseButtonEventArgs e)
+        private void Cell_MouseLeftUp(object sender, RoutedEventArgs e)
         {
-            var label = (Label)sender;
+            var lbl = (Label)sender;
 
             var changedCells = new List<ChangedCell>();
-            
-            if (App.TryClearCell(Grid.GetColumn(label), Grid.GetRow(label), ref changedCells))
+
+            if (App.TryClearCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref changedCells))
             {
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
@@ -129,8 +129,8 @@ namespace Minesweeper
                         // TODO How do we get the UI element at a specific coordinate?
 
                         // if the cell has no neighboring mines, leave the count blank
-                        label.Content = null /* TODO What do we want to say here? */;
-                        label.Background = CELL_CLEARED_BACKGROUND;
+                        lbl.Content = null /* TODO What do we want to say here? */;
+                        lbl.Background = CELL_CLEARED_BACKGROUND;
                     }
                 }
             }

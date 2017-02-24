@@ -7,7 +7,7 @@
     {
         //public ChangedCell()
         //{
-            
+
         //}
 
         // TODO what do we need to know about a Cell that has changed?

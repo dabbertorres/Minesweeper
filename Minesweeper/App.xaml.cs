@@ -47,7 +47,7 @@ namespace Minesweeper
         public static bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
         {
             var coord = new Coordinate(x, y);
-            
+
             if (currentField.Clear(coord))
             {
                 var cell = currentField[coord];
@@ -178,7 +178,7 @@ namespace Minesweeper
 
                     // TODO What is/are the condition(s) to clear the neighbors of the neighbor at coord?
                     //if ()
-                        changedCells.AddRange(ClearLonelyNeighbors(coord));
+                    changedCells.AddRange(ClearLonelyNeighbors(coord));
                 }
             }
 
