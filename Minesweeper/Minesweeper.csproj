@@ -71,8 +71,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Cell.cs" />
-	<Compile Include="ChangedCell.cs" />
-	<Compile Include="Coordinate.cs" />
+    <Compile Include="ChangedCell.cs" />
+    <Compile Include="Coordinate.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -114,6 +114,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="mine.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\cool.png" />
+    <Resource Include="Resources\dead.png" />
+    <Resource Include="Resources\happy.png" />
+    <Resource Include="Resources\scared.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
