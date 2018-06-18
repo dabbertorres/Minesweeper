@@ -24,7 +24,12 @@ namespace Minesweeper
         /// </summary>
         public static event Action<DateTime> TimerTick;
 
-        private static MineField currentField;
+        public static MineField CurrentField
+        {
+            get;
+            private set;
+        }
+
         private static DispatcherTimer timer;
         private static DateTime startTime;
 
@@ -48,9 +53,9 @@ namespace Minesweeper
         {
             var coord = new Coordinate(x, y);
 
-            if (currentField.Clear(coord))
+            if (CurrentField.Clear(coord))
             {
-                var cell = currentField[coord];
+                var cell = CurrentField[coord];
 
                 if (!cell.Flagged)
                 {
@@ -83,15 +88,15 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
         public static bool ToggleFlagCell(int x, int y, ref bool cleared, ref int flagsLeft)
         {
-            if (currentField[x, y].Cleared)
+            if (CurrentField[x, y].Cleared)
             {
                 cleared = true;
                 return false;
             }
 
-            bool flagged = currentField.ToggleFlag(x, y);
+            bool flagged = CurrentField.ToggleFlag(x, y);
 
-            flagsLeft = currentField.MineCount - currentField.FlagsPlaced();
+            flagsLeft = CurrentField.MineCount - CurrentField.FlagsPlaced();
 
             CheckGameWon();
 
@@ -104,13 +109,13 @@ namespace Minesweeper
         /// <returns>List of <see cref="Coordinate"/>s containing a mine</returns>
         public static List<Coordinate> Mines()
         {
-            var mines = new List<Coordinate>(currentField.MineCount);
+            var mines = new List<Coordinate>(CurrentField.MineCount);
 
-            for (int i = 0; i < currentField.Width; ++i)
+            for (int i = 0; i < CurrentField.Width; ++i)
             {
-                for (int j = 0; j < currentField.Height; ++j)
+                for (int j = 0; j < CurrentField.Height; ++j)
                 {
-                    if (currentField[i, j].IsMine)
+                    if (CurrentField[i, j].IsMine)
                         mines.Add(new Coordinate(i, j));
                 }
             }
@@ -121,12 +126,15 @@ namespace Minesweeper
         /// <summary>
         /// Resets game-state data for a new game.
         /// </summary>
-        /// <param name="field">The <see cref="MineField"/> of the new game.</param>
-        public static void StartNewGame(MineField field)
+        /// <param name="width">The width of the new field</param>
+        /// <param name="height">The height of the new field</param>
+        /// <param name="mineCount">The number of mines in the new field</param>
+        /// <param name="startX">The x coordinate of the starting point</param>
+        /// <param name="startY">The y coordinate of the starting point</param>
+        public static void StartNewGame(MineField field, int startX, int startY)
         {
-            currentField = field;
-
-            startTime = DateTime.Now;
+            CurrentField = new MineField(field.Width, field.Height, field.MineCount, startX, startY);
+            startTime    = DateTime.Now;
             timer.Start();
         }
 
@@ -134,11 +142,11 @@ namespace Minesweeper
         /// Checks if the current field has been correctly cleared. Stops timer and sets <see cref="GameWon"/> if so
         /// </summary>
         /// <remarks>
-        /// Checks if <see cref="currentField"/>'s <see cref="MineField.MinesLeft()"/> == 0 and <see cref="currentField"/>'s <see cref="MineField.CellsLeft()"/> == 0
+        /// Checks if <see cref="CurrentField"/>'s <see cref="MineField.MinesLeft()"/> == 0 and <see cref="CurrentField"/>'s <see cref="MineField.CellsLeft()"/> == 0
         /// </remarks>
         public static void CheckGameWon()
         {
-            if (currentField.MinesLeft() == 0 && currentField.CellsLeft() == 0)
+            if (CurrentField.MinesLeft() == 0 && CurrentField.CellsLeft() == 0)
             {
                 timer.Stop();
                 GameEnd?.Invoke(true);
@@ -150,17 +158,32 @@ namespace Minesweeper
         /// </summary>
         /// <typeparam name="T">The type of resource to load from <paramref name="path"/></typeparam>
         /// <param name="path">The pathname of the resource to load</param>
+        /// <returns>A new instance of <typeparamref name="T"/> from the resource at <paramref name="path"/>.</returns>
+        public static T LoadResource<T>(string path) where T : class
+        {
+            return Activator.CreateInstance(typeof(T), ResourceUri(path)) as T;
+        }
+
+        /// <summary>
+        /// Generic wrapper function for simpler WPF resource loading.
+        /// </summary>
+        /// <typeparam name="T">The type of resource to load from <paramref name="path"/></typeparam>
+        /// <param name="path">The pathname of the resource to load</param>
         /// <param name="constructor">Function wrapping a constructor for <typeparamref name="T"/> that takes a <see cref="Uri"/> as an argument.</param>
         /// <returns>A new instance of <typeparamref name="T"/> from the resource at <paramref name="path"/>.</returns>
         public static T LoadResource<T>(string path, Func<Uri, T> constructor)
+        {
+            return constructor(ResourceUri(path));
+        }
+
+        private static Uri ResourceUri(string path)
         {
             var sb = new StringBuilder();
             sb.Append(@"pack://application:,,,/");
             sb.Append(ResourceAssembly.GetName().Name);
             sb.Append(";component/Resources/");
             sb.Append(path);
-
-            return constructor(new Uri(sb.ToString(), UriKind.Absolute));
+            return new Uri(sb.ToString(), UriKind.Absolute);
         }
 
         /// <summary>
@@ -176,14 +199,14 @@ namespace Minesweeper
         {
             List<ChangedCell> changedCells = new List<ChangedCell>();
 
-            foreach (var coord in currentField.Neighbors(center))
+            foreach (var coord in CurrentField.Neighbors(center))
             {
-                var cell = currentField[coord];
+                var cell = CurrentField[coord];
 
                 // if (c.x, c.y) has no mines nearby, recurse to get its neighbors too
                 if (!cell.Cleared && !cell.Flagged)
                 {
-                    currentField.Clear(coord);
+                    CurrentField.Clear(coord);
 
                     changedCells.Add(new ChangedCell(coord, cell.NeighboringMines));
 

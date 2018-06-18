@@ -12,26 +12,17 @@ namespace Minesweeper
         /// <summary>
         /// An "easy" difficulty preset. Consists of a 9x9 grid, containing 10 mines.
         /// </summary>
-        public static MineField Easy
-        {
-            get { return new MineField(9, 9, 10); }
-        }
+        public static readonly MineField Easy = new MineField(9, 9, 10);
 
         /// <summary>
         /// A "medium" difficulty preset. Consists of a 16x16 grid, containing 40 mines.
         /// </summary>
-        public static MineField Medium
-        {
-            get { return new MineField(16, 16, 40); }
-        }
+        public static readonly MineField Medium = new MineField(16, 16, 40);
 
         /// <summary>
         /// A "hard" difficulty preset. Consists of a 30x16 grid, containing 100 mines.
         /// </summary>
-        public static MineField Hard
-        {
-            get { return new MineField(30, 16, 100); }
-        }
+        public static readonly MineField Hard = new MineField(30, 16, 100);
 
         /// <summary>
         /// Two dimensional array representing the grid of <see cref="Cell"/>s
@@ -64,15 +55,29 @@ namespace Minesweeper
         }
 
         /// <summary>
+        /// Creates a cleared MineField for simply storing settings.
+        /// </summary>
+        /// <param name="width">The number of <see cref="Cell"/>s per row</param>
+        /// <param name="height">The number of <see cref="Cell"/>s per column</param>
+        /// <param name="mineCount">The number of mines to place in the <see cref="MineField"/></param>
+        private MineField(int width, int height, int mineCount)
+        {
+            cells     = new Cell[width, height];
+            MineCount = mineCount;
+        }
+
+        /// <summary>
         /// Creates a <paramref name="width"/>x<paramref name="height"/> grid of <see cref="Cell"/>s,
         /// and randomly distributes <paramref name="mineCount"/> mines throughout
         /// </summary>
         /// <param name="width">The number of <see cref="Cell"/>s per row</param>
         /// <param name="height">The number of <see cref="Cell"/>s per column</param>
         /// <param name="mineCount">The number of mines to place in the <see cref="MineField"/></param>
-        public MineField(int width, int height, int mineCount)
+        /// <param name="startX">The x coordinate of the starting point</param>
+        /// <param name="startY">The y coordinate of the starting point</param>
+        public MineField(int width, int height, int mineCount, int startX, int startY)
         {
-            cells = new Cell[width, height];
+            cells     = new Cell[width, height];
             MineCount = mineCount;
 
             // we want mineCount unique coordinates generated. To make sure the same coordinate is not
@@ -81,13 +86,17 @@ namespace Minesweeper
             var possibleCoordinates = new List<Coordinate>(width * height);
 
             // fill our set of coordinates
-            for (int x = 0; x < width; ++x)
+            for (int y = 0; y < height; ++y)
             {
-                for (int y = 0; y < height; ++y)
+                for (int x = 0; x < width; ++x)
                 {
                     possibleCoordinates.Add(new Coordinate(x, y));
                 }
             }
+
+            // remove the cell corresponding to startX, startY and its neighbors from the possible coordinates
+            possibleCoordinates.Remove(new Coordinate(startX, startY));
+            possibleCoordinates.RemoveAll(Neighbors(startX, startY).Contains);
 
             // we don't want the same minefield the same every time
             Random rand = new Random();

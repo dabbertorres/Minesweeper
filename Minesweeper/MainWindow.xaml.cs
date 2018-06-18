@@ -12,24 +12,36 @@ namespace Minesweeper
     public partial class MainWindow : Window
     {
         // UI resources
-        private readonly SolidColorBrush CELL_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
+        private readonly SolidColorBrush CELL_BACKGROUND         = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
         private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
-        private readonly ImageBrush MINE_IMAGE = new ImageBrush(App.LoadResource("mine.png", u => new BitmapImage(u)));
-        private readonly ImageBrush FLAG_IMAGE = new ImageBrush(App.LoadResource("flag.png", u => new BitmapImage(u)));
-        private readonly ImageBrush HAPPY_IMAGE = new ImageBrush(App.LoadResource("happy.png", u => new BitmapImage(u)));
-        private readonly ImageBrush SCARED_IMAGE = new ImageBrush(App.LoadResource("scared.png", u => new BitmapImage(u)));
-        private readonly ImageBrush COOL_IMAGE = new ImageBrush(App.LoadResource("cool.png", u => new BitmapImage(u)));
-        private readonly ImageBrush DEAD_IMAGE = new ImageBrush(App.LoadResource("dead.png", u => new BitmapImage(u)));
+        private readonly ImageBrush MINE_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("mine.png"));
+        private readonly ImageBrush FLAG_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("flag.png"));
+        private readonly ImageBrush HAPPY_IMAGE  = new ImageBrush(App.LoadResource<BitmapImage>("happy.png"));
+        private readonly ImageBrush SCARED_IMAGE = new ImageBrush(App.LoadResource<BitmapImage>("scared.png"));
+        private readonly ImageBrush COOL_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("cool.png"));
+        private readonly ImageBrush DEAD_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("dead.png"));
 
-        private readonly SolidColorBrush ONE_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0xff));
-        private readonly SolidColorBrush TWO_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x00, 0x80, 0x00));
-        private readonly SolidColorBrush THREE_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0xff, 0x00, 0x00));
-        private readonly SolidColorBrush FOUR_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0x80));
-        private readonly SolidColorBrush FIVE_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x80, 0x00, 0x00));
-        private readonly SolidColorBrush SIX_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x00, 0x80, 0x80));
-        private readonly SolidColorBrush SEVEN_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x00, 0x00, 0x00));
-        private readonly SolidColorBrush EIGHT_MINE_COLOR = new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
+        private readonly SolidColorBrush ONE_MINE_COLOR   = new SolidColorBrush(Colors.Blue);
+        private readonly SolidColorBrush TWO_MINE_COLOR   = new SolidColorBrush(Colors.Green);
+        private readonly SolidColorBrush THREE_MINE_COLOR = new SolidColorBrush(Colors.Red);
+        private readonly SolidColorBrush FOUR_MINE_COLOR  = new SolidColorBrush(Colors.Navy);
+        private readonly SolidColorBrush FIVE_MINE_COLOR  = new SolidColorBrush(Colors.Maroon);
+        private readonly SolidColorBrush SIX_MINE_COLOR   = new SolidColorBrush(Colors.Teal);
+        private readonly SolidColorBrush SEVEN_MINE_COLOR = new SolidColorBrush(Colors.Black);
+        private readonly SolidColorBrush EIGHT_MINE_COLOR = new SolidColorBrush(Colors.Gray);
+
+        private const string MSG_WIN_TEXT = "You win! Play again?";
+        private const string MSG_LOS_TEXT = "Game over! Play again?";
+        private const string MSG_WIN_CAP  = "Win!";
+        private const string MSG_LOS_CAP  = "Game Over!";
+
+        /// <summary>
+        /// newGame is set whenever a new game is started, and invoked on the first cell clear.
+        /// It is used to guarantee a safe start (3x3 area) for the player.
+        /// The parameters are the x,y coordinate of the first cell clear.
+        /// </summary>
+        private Action<int, int> newGame = null;
 
         /// <summary>
         /// Loads resources and sets up event callback functions
@@ -38,15 +50,15 @@ namespace Minesweeper
         {
             InitializeComponent();
 
-            MINE_IMAGE.Stretch = Stretch.Uniform;
-            FLAG_IMAGE.Stretch = Stretch.Uniform;
-            HAPPY_IMAGE.Stretch = Stretch.Uniform;
+            MINE_IMAGE.Stretch   = Stretch.Uniform;
+            FLAG_IMAGE.Stretch   = Stretch.Uniform;
+            HAPPY_IMAGE.Stretch  = Stretch.Uniform;
             SCARED_IMAGE.Stretch = Stretch.Uniform;
-            COOL_IMAGE.Stretch = Stretch.Uniform;
-            DEAD_IMAGE.Stretch = Stretch.Uniform;
+            COOL_IMAGE.Stretch   = Stretch.Uniform;
+            DEAD_IMAGE.Stretch   = Stretch.Uniform;
 
             App.TimerTick += startTime => TimerText.Text = ((int)(DateTime.Now - startTime).TotalSeconds).ToString();
-            App.GameEnd += StopGame;
+            App.GameEnd   += StopGame;
             
             statusImage.Background = HAPPY_IMAGE;
 
@@ -91,27 +103,24 @@ namespace Minesweeper
                     Grid.SetRow(lbl, j);
 
                     // 32x32 cells looks decent
-                    lbl.MinWidth = 32;
-                    lbl.MinHeight = 32;
-
+                    lbl.MinWidth   = 32;
+                    lbl.MinHeight  = 32;
                     lbl.Background = CELL_BACKGROUND;
-
-                    lbl.FontSize = 16;
+                    lbl.FontSize   = 16;
                     lbl.FontWeight = FontWeights.UltraBold;
 
                     lbl.HorizontalContentAlignment = HorizontalAlignment.Center;
-                    lbl.VerticalContentAlignment = VerticalAlignment.Center;
+                    lbl.VerticalContentAlignment   = VerticalAlignment.Center;
 
                     lbl.MouseLeftButtonDown += Cell_MouseLeftDown;
-
-                    lbl.MouseLeftButtonUp += Cell_MouseLeftUp;
-                    lbl.MouseRightButtonUp += Cell_MouseRightUp;
+                    lbl.MouseLeftButtonUp   += Cell_MouseLeftUp;
+                    lbl.MouseRightButtonUp  += Cell_MouseRightUp;
 
                     MineFieldGrid.Children.Add(lbl);
                 }
             }
 
-            MinesLeft.Text = mineCount.ToString();
+            MinesLeft.Text         = mineCount.ToString();
             statusImage.Background = HAPPY_IMAGE;
         }
 
@@ -122,28 +131,39 @@ namespace Minesweeper
         {
             foreach (Label lbl in MineFieldGrid.Children)
             {
-                lbl.MouseLeftButtonUp -= Cell_MouseLeftUp;
+                lbl.MouseLeftButtonUp  -= Cell_MouseLeftUp;
                 lbl.MouseRightButtonUp -= Cell_MouseRightUp;
             }
+
+            string text;
+            string caption;
 
             if (won)
             {
                 statusImage.Background = COOL_IMAGE;
-                MessageBox.Show("You win!");
+
+                text    = MSG_WIN_TEXT;
+                caption = MSG_WIN_CAP;
             }
             else
             {
                 statusImage.Background = DEAD_IMAGE;
-                MessageBox.Show("Game Over!");
 
-                var mines = App.Mines();
+                text    = MSG_LOS_TEXT;
+                caption = MSG_LOS_CAP;
 
                 // show user where all the mines were
-                foreach (var coord in mines)
+                foreach (var coord in App.Mines())
                 {
                     GetLabelFromCoord(coord).Background = MINE_IMAGE;
                 }
             }
+
+            var result = MessageBox.Show(this, text, caption, MessageBoxButton.YesNo);
+
+            // start a new game with the same parameters
+            if (result == MessageBoxResult.Yes)
+                GameNew(App.CurrentField);
         }
 
         /// <summary>
@@ -165,9 +185,18 @@ namespace Minesweeper
         {
             var lbl = (Label)sender;
 
+            int x = Grid.GetColumn(lbl);
+            int y = Grid.GetRow(lbl);
+
+            if (newGame != null)
+            {
+                newGame.Invoke(x, y);
+                newGame = null;
+            }
+
             var changedCells = new List<ChangedCell>();
 
-            if (App.TryClearCell(Grid.GetColumn(lbl), Grid.GetRow(lbl), ref changedCells))
+            if (App.TryClearCell(x, y, ref changedCells))
             {
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
@@ -288,11 +317,7 @@ namespace Minesweeper
         /// <param name="e"></param>
         private void GameNewEasy_Click(object sender, RoutedEventArgs e)
         {
-            var easy = MineField.Easy;
-
-            StartNewGame(easy.Width, easy.Height, easy.MineCount);
-            App.StartNewGame(easy);
-
+            GameNew(MineField.Easy);
             e.Handled = true;
         }
 
@@ -303,11 +328,7 @@ namespace Minesweeper
         /// <param name="e"></param>
         private void GameNewMedium_Click(object sender, RoutedEventArgs e)
         {
-            var medium = MineField.Medium;
-
-            StartNewGame(medium.Width, medium.Height, medium.MineCount);
-            App.StartNewGame(medium);
-
+            GameNew(MineField.Medium);
             e.Handled = true;
         }
 
@@ -318,11 +339,7 @@ namespace Minesweeper
         /// <param name="e"></param>
         private void GameNewHard_Click(object sender, RoutedEventArgs e)
         {
-            var hard = MineField.Hard;
-
-            StartNewGame(hard.Width, hard.Height, hard.MineCount);
-            App.StartNewGame(hard);
-
+            GameNew(MineField.Hard);
             e.Handled = true;
         }
 
@@ -335,6 +352,12 @@ namespace Minesweeper
         {
             Close();
             e.Handled = true;
+        }
+
+        private void GameNew(MineField field)
+        {
+            StartNewGame(field.Width, field.Height, field.MineCount);
+            newGame = (x, y) => App.StartNewGame(field, x, y);
         }
     }
 }
