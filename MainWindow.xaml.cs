@@ -12,36 +12,43 @@ namespace Minesweeper
     public partial class MainWindow : Window
     {
         // UI resources
-        private readonly SolidColorBrush CELL_BACKGROUND         = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
-        private readonly SolidColorBrush CELL_CLEARED_BACKGROUND = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
+        private readonly SolidColorBrush cellBackground        = new SolidColorBrush(Color.FromRgb(0xdd, 0xdd, 0xdd));
+        private readonly SolidColorBrush cellClearedBackground = new SolidColorBrush(Color.FromRgb(0xee, 0xee, 0xee));
 
-        private readonly ImageBrush MINE_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("mine.png"));
-        private readonly ImageBrush FLAG_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("flag.png"));
-        private readonly ImageBrush HAPPY_IMAGE  = new ImageBrush(App.LoadResource<BitmapImage>("happy.png"));
-        private readonly ImageBrush SCARED_IMAGE = new ImageBrush(App.LoadResource<BitmapImage>("scared.png"));
-        private readonly ImageBrush COOL_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("cool.png"));
-        private readonly ImageBrush DEAD_IMAGE   = new ImageBrush(App.LoadResource<BitmapImage>("dead.png"));
+        private readonly ImageBrush mineImage;
+        private readonly ImageBrush flagImage;
+        private readonly ImageBrush happyImage;
+        private readonly ImageBrush scaredImage;
+        private readonly ImageBrush coolImage;
+        private readonly ImageBrush deadImage;
 
-        private readonly SolidColorBrush ONE_MINE_COLOR   = new SolidColorBrush(Colors.Blue);
-        private readonly SolidColorBrush TWO_MINE_COLOR   = new SolidColorBrush(Colors.Green);
-        private readonly SolidColorBrush THREE_MINE_COLOR = new SolidColorBrush(Colors.Red);
-        private readonly SolidColorBrush FOUR_MINE_COLOR  = new SolidColorBrush(Colors.Navy);
-        private readonly SolidColorBrush FIVE_MINE_COLOR  = new SolidColorBrush(Colors.Maroon);
-        private readonly SolidColorBrush SIX_MINE_COLOR   = new SolidColorBrush(Colors.Teal);
-        private readonly SolidColorBrush SEVEN_MINE_COLOR = new SolidColorBrush(Colors.Black);
-        private readonly SolidColorBrush EIGHT_MINE_COLOR = new SolidColorBrush(Colors.Gray);
+        private readonly SolidColorBrush[] colors = new SolidColorBrush[]{
+            new SolidColorBrush(Colors.Blue),
+            new SolidColorBrush(Colors.Green),
+            new SolidColorBrush(Colors.Red),
+            new SolidColorBrush(Colors.Navy),
+            new SolidColorBrush(Colors.Maroon),
+            new SolidColorBrush(Colors.Teal),
+            new SolidColorBrush(Colors.Black),
+            new SolidColorBrush(Colors.Gray),
+        };
 
-        private const string MSG_WIN_TEXT = "You win! Play again?";
-        private const string MSG_LOS_TEXT = "Game over! Play again?";
-        private const string MSG_WIN_CAP  = "Win!";
-        private const string MSG_LOS_CAP  = "Game Over!";
+        private const string msgWinText     = "You win! Play again?";
+        private const string msgLossText    = "Game over! Play again?";
+        private const string msgWinCaption  = "Win!";
+        private const string msgLossCaption = "Game Over!";
 
         /// <summary>
         /// newGame is set whenever a new game is started, and invoked on the first cell clear.
         /// It is used to guarantee a safe start (3x3 area) for the player.
         /// The parameters are the x,y coordinate of the first cell clear.
         /// </summary>
-        private Action<int, int> newGame = null;
+        private Action<int, int>? newGame = null;
+
+        private App currentApp
+        {
+            get { return (Application.Current as App)!; }
+        }
 
         /// <summary>
         /// Loads resources and sets up event callback functions
@@ -50,24 +57,31 @@ namespace Minesweeper
         {
             InitializeComponent();
 
-            MINE_IMAGE.Stretch   = Stretch.Uniform;
-            FLAG_IMAGE.Stretch   = Stretch.Uniform;
-            HAPPY_IMAGE.Stretch  = Stretch.Uniform;
-            SCARED_IMAGE.Stretch = Stretch.Uniform;
-            COOL_IMAGE.Stretch   = Stretch.Uniform;
-            DEAD_IMAGE.Stretch   = Stretch.Uniform;
+            mineImage   = new ImageBrush(currentApp.LoadResource<BitmapImage>("mine.png"));
+            flagImage   = new ImageBrush(currentApp.LoadResource<BitmapImage>("flag.png"));
+            happyImage  = new ImageBrush(currentApp.LoadResource<BitmapImage>("happy.png"));
+            scaredImage = new ImageBrush(currentApp.LoadResource<BitmapImage>("scared.png"));
+            coolImage   = new ImageBrush(currentApp.LoadResource<BitmapImage>("cool.png"));
+            deadImage   = new ImageBrush(currentApp.LoadResource<BitmapImage>("dead.png"));
 
-            App.TimerTick += startTime => TimerText.Text = ((int)(DateTime.Now - startTime).TotalSeconds).ToString();
-            App.GameEnd   += StopGame;
-            
-            statusImage.Background = HAPPY_IMAGE;
+            mineImage.Stretch   = Stretch.Uniform;
+            flagImage.Stretch   = Stretch.Uniform;
+            happyImage.Stretch  = Stretch.Uniform;
+            scaredImage.Stretch = Stretch.Uniform;
+            coolImage.Stretch   = Stretch.Uniform;
+            deadImage.Stretch   = Stretch.Uniform;
+
+            currentApp.TimerTick += startTime => TimerText.Text = ((int)(DateTime.Now - startTime).TotalSeconds).ToString();
+            currentApp.GameEnd   += StopGame;
+
+            statusImage.Background = happyImage;
 
             // if the user wants to cancel a mouse press by letting go after moving off the grid,
             // we need to change the status image back to happy (so it's not stuck on scared until the next press)
-            MouseLeftButtonUp += (s, e) => { statusImage.Background = HAPPY_IMAGE; };
+            MouseLeftButtonUp += (s, e) => { statusImage.Background = happyImage; };
 
             // above isn't called if the mouse left the window
-            MouseLeave += (s, e) => { statusImage.Background = HAPPY_IMAGE; };
+            MouseLeave += (s, e) => { statusImage.Background = happyImage; };
         }
 
         /// <summary>
@@ -83,7 +97,7 @@ namespace Minesweeper
             MineFieldGrid.RowDefinitions.Clear();
             MineFieldGrid.ColumnDefinitions.Clear();
 
-            /* setup our rows and columns for cells */
+            // setup our rows and columns for cells
             for (int i = 0; i < height; ++i)
                 MineFieldGrid.RowDefinitions.Add(new RowDefinition());
 
@@ -105,7 +119,7 @@ namespace Minesweeper
                     // 32x32 cells looks decent
                     lbl.MinWidth   = 32;
                     lbl.MinHeight  = 32;
-                    lbl.Background = CELL_BACKGROUND;
+                    lbl.Background = cellBackground;
                     lbl.FontSize   = 16;
                     lbl.FontWeight = FontWeights.UltraBold;
 
@@ -121,7 +135,7 @@ namespace Minesweeper
             }
 
             MinesLeft.Text         = mineCount.ToString();
-            statusImage.Background = HAPPY_IMAGE;
+            statusImage.Background = happyImage;
         }
 
         /// <summary>
@@ -140,22 +154,22 @@ namespace Minesweeper
 
             if (won)
             {
-                statusImage.Background = COOL_IMAGE;
+                statusImage.Background = coolImage;
 
-                text    = MSG_WIN_TEXT;
-                caption = MSG_WIN_CAP;
+                text    = msgWinText;
+                caption = msgWinCaption;
             }
             else
             {
-                statusImage.Background = DEAD_IMAGE;
+                statusImage.Background = deadImage;
 
-                text    = MSG_LOS_TEXT;
-                caption = MSG_LOS_CAP;
+                text    = msgLossText;
+                caption = msgLossCaption;
 
                 // show user where all the mines were
-                foreach (var coord in App.Mines())
+                foreach (var coord in currentApp.Mines())
                 {
-                    GetLabelFromCoord(coord).Background = MINE_IMAGE;
+                    GetLabelFromCoord(coord).Background = mineImage;
                 }
             }
 
@@ -163,7 +177,7 @@ namespace Minesweeper
 
             // start a new game with the same parameters
             if (result == MessageBoxResult.Yes)
-                GameNew(App.CurrentField);
+                GameNew(currentApp.CurrentField);
         }
 
         /// <summary>
@@ -173,7 +187,7 @@ namespace Minesweeper
         /// <param name="e"></param>
         private void Cell_MouseLeftDown(object sender, RoutedEventArgs e)
         {
-            statusImage.Background = SCARED_IMAGE; 
+            statusImage.Background = scaredImage;
         }
 
         /// <summary>
@@ -196,62 +210,29 @@ namespace Minesweeper
 
             var changedCells = new List<ChangedCell>();
 
-            if (App.TryClearCell(x, y, ref changedCells))
+            if (currentApp.TryClearCell(x, y, ref changedCells))
             {
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
                     lbl = GetLabelFromCoord(cell.coordinate);
 
-                    // set the text first, so we don't need to duplicate the line so many times
-                    // if the mine count is 0, it will get set to null
-                    lbl.Content = cell.neighboringMines.ToString();
-
                     // yay colors
-                    switch (cell.neighboringMines)
+                    if (cell.neighboringMines > 0 && cell.neighboringMines <= colors.Length)
                     {
-                        case 1:
-                            lbl.Foreground = ONE_MINE_COLOR;
-                            break;
-
-                        case 2:
-                            lbl.Foreground = TWO_MINE_COLOR;
-                            break;
-
-                        case 3:
-                            lbl.Foreground = THREE_MINE_COLOR;
-                            break;
-
-                        case 4:
-                            lbl.Foreground = FOUR_MINE_COLOR;
-                            break;
-
-                        case 5:
-                            lbl.Foreground = FIVE_MINE_COLOR;
-                            break;
-
-                        case 6:
-                            lbl.Foreground = SIX_MINE_COLOR;
-                            break;
-
-                        case 7:
-                            lbl.Foreground = SEVEN_MINE_COLOR;
-                            break;
-
-                        case 8:
-                            lbl.Foreground = EIGHT_MINE_COLOR;
-                            break;
-
-                        default:
-                            lbl.Content = null;
-                            lbl.Foreground = null;
-                            break;
+                        lbl.Content = cell.neighboringMines.ToString();
+                        lbl.Foreground = colors[cell.neighboringMines - 1];
                     }
-                    
-                    lbl.Background = CELL_CLEARED_BACKGROUND;
+                    else
+                    {
+                        lbl.Content = null;
+                        lbl.Foreground = null;
+                    }
+
+                    lbl.Background = cellClearedBackground;
                 }
-                
-                statusImage.Background = HAPPY_IMAGE;
+
+                statusImage.Background = happyImage;
             }
             else
             {
@@ -277,10 +258,10 @@ namespace Minesweeper
 
             bool cleared = false;
 
-            if (App.ToggleFlagCell(x, y, ref cleared, ref flagsLeft))
-                lbl.Background = FLAG_IMAGE;
+            if (currentApp.ToggleFlagCell(x, y, ref cleared, ref flagsLeft))
+                lbl.Background = flagImage;
             else if (!cleared)
-                lbl.Background = CELL_BACKGROUND;
+                lbl.Background = cellBackground;
 
             MinesLeft.Text = flagsLeft.ToString();
 
@@ -357,7 +338,7 @@ namespace Minesweeper
         private void GameNew(MineField field)
         {
             StartNewGame(field.Width, field.Height, field.MineCount);
-            newGame = (x, y) => App.StartNewGame(field, x, y);
+            newGame = (x, y) => currentApp.StartNewGame(field, x, y);
         }
     }
 }

@@ -15,31 +15,38 @@ namespace Minesweeper
         public delegate void GameEndCallback(bool won);
 
         /// <summary>
-        /// Provides access to a event when the game ends. 
+        /// Provides access to a event when the game ends.
         /// </summary>
-        public static event GameEndCallback GameEnd;
+        public event GameEndCallback? GameEnd;
 
         /// <summary>
         /// Provides access to a event providing the current time, called every second
         /// </summary>
-        public static event Action<DateTime> TimerTick;
+        public event Action<DateTime>? TimerTick;
 
-        public static MineField CurrentField
+        public MineField CurrentField
         {
             get;
             private set;
         }
 
-        private static DispatcherTimer timer;
-        private static DateTime startTime;
+        private DispatcherTimer timer;
+        private DateTime startTime;
 
         /// <summary>
         /// One-time data initialization, since we only ever create one <see cref="App"/> instance!
         /// </summary>
         public App()
         {
-            timer = new DispatcherTimer(new TimeSpan(0, 0, 1), DispatcherPriority.Send, (s, e) => TimerTick?.Invoke(startTime), Dispatcher);
+            timer = new DispatcherTimer(
+                new TimeSpan(0, 0, 1),
+                DispatcherPriority.Send,
+                (s, e) => TimerTick?.Invoke(startTime),
+                Dispatcher);
             timer.Stop();
+
+            // placeholder initial value
+            CurrentField = MineField.Easy;
         }
 
         /// <summary>
@@ -49,7 +56,7 @@ namespace Minesweeper
         /// <param name="y">The 0-based row number of a <see cref="Cell"/></param>
         /// <param name="changedCells">The list of <see cref="Cell"/>s affected by this clear action. Data about changed <see cref="Cell"/>s is provided via <see cref="ChangedCell"/>.</param>
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) is safe to clear (not a mine), false otherwise</returns>
-        public static bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
+        public bool TryClearCell(int x, int y, ref List<ChangedCell> changedCells)
         {
             var coord = new Coordinate(x, y);
 
@@ -86,7 +93,7 @@ namespace Minesweeper
         /// <param name="cleared">Assigned to true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) is already cleared</param>
         /// <param name="flagsLeft">Assigned to the number of unflagged mines left, assuming all placed flags are correct.</param>
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
-        public static bool ToggleFlagCell(int x, int y, ref bool cleared, ref int flagsLeft)
+        public bool ToggleFlagCell(int x, int y, ref bool cleared, ref int flagsLeft)
         {
             if (CurrentField[x, y].Cleared)
             {
@@ -107,7 +114,7 @@ namespace Minesweeper
         /// Returns a list of the <see cref="Coordinate"/>s containing a mine.
         /// </summary>
         /// <returns>List of <see cref="Coordinate"/>s containing a mine</returns>
-        public static List<Coordinate> Mines()
+        public List<Coordinate> Mines()
         {
             var mines = new List<Coordinate>(CurrentField.MineCount);
 
@@ -131,7 +138,7 @@ namespace Minesweeper
         /// <param name="mineCount">The number of mines in the new field</param>
         /// <param name="startX">The x coordinate of the starting point</param>
         /// <param name="startY">The y coordinate of the starting point</param>
-        public static void StartNewGame(MineField field, int startX, int startY)
+        public void StartNewGame(MineField field, int startX, int startY)
         {
             CurrentField = new MineField(field.Width, field.Height, field.MineCount, startX, startY);
             startTime    = DateTime.Now;
@@ -144,7 +151,7 @@ namespace Minesweeper
         /// <remarks>
         /// Checks if <see cref="CurrentField"/>'s <see cref="MineField.MinesLeft()"/> == 0 and <see cref="CurrentField"/>'s <see cref="MineField.CellsLeft()"/> == 0
         /// </remarks>
-        public static void CheckGameWon()
+        public void CheckGameWon()
         {
             if (CurrentField.MinesLeft() == 0 && CurrentField.CellsLeft() == 0)
             {
@@ -159,9 +166,9 @@ namespace Minesweeper
         /// <typeparam name="T">The type of resource to load from <paramref name="path"/></typeparam>
         /// <param name="path">The pathname of the resource to load</param>
         /// <returns>A new instance of <typeparamref name="T"/> from the resource at <paramref name="path"/>.</returns>
-        public static T LoadResource<T>(string path) where T : class
+        public T LoadResource<T>(string path) where T : class
         {
-            return Activator.CreateInstance(typeof(T), ResourceUri(path)) as T;
+            return (Activator.CreateInstance(typeof(T), ResourceUri(path)) as T)!;
         }
 
         /// <summary>
@@ -171,12 +178,12 @@ namespace Minesweeper
         /// <param name="path">The pathname of the resource to load</param>
         /// <param name="constructor">Function wrapping a constructor for <typeparamref name="T"/> that takes a <see cref="Uri"/> as an argument.</param>
         /// <returns>A new instance of <typeparamref name="T"/> from the resource at <paramref name="path"/>.</returns>
-        public static T LoadResource<T>(string path, Func<Uri, T> constructor)
+        public T LoadResource<T>(string path, Func<Uri, T> constructor)
         {
             return constructor(ResourceUri(path));
         }
 
-        private static Uri ResourceUri(string path)
+        private Uri ResourceUri(string path)
         {
             var sb = new StringBuilder();
             sb.Append(@"pack://application:,,,/");
@@ -195,7 +202,7 @@ namespace Minesweeper
         /// </remarks>
         /// <param name="center">The <see cref="Coordinate"/> to start clearing at.</param>
         /// <returns>A <see cref="List{ChangedCell}"/> of all cleared <see cref="Cell"/>s.</returns>
-        private static List<ChangedCell> ClearLonelyNeighbors(Coordinate center)
+        private List<ChangedCell> ClearLonelyNeighbors(Coordinate center)
         {
             List<ChangedCell> changedCells = new List<ChangedCell>();
 
