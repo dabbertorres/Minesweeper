@@ -6,13 +6,6 @@
     /// <remarks>Where <see cref="Cell.Flagged"/> or <see cref="Cell.Cleared"/> changed</remarks>
     public struct ChangedCell
     {
-        public ChangedCell(Coordinate coord, int mines)
-        {
-            coordinate = coord;
-            neighboringMines = mines;
-        }
-
-        public Coordinate coordinate;
-        public int neighboringMines;
+        // TODO: What do we need to know about a Cell that has changed?
     }
 }

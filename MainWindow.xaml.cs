@@ -154,23 +154,11 @@ namespace Minesweeper
 
             if (won)
             {
-                statusImage.Background = coolImage;
-
-                text    = msgWinText;
-                caption = msgWinCaption;
+                throw new NotImplementedException("Inform win");
             }
             else
             {
-                statusImage.Background = deadImage;
-
-                text    = msgLossText;
-                caption = msgLossCaption;
-
-                // show user where all the mines were
-                foreach (var coord in currentApp.Mines())
-                {
-                    GetLabelFromCoord(coord).Background = mineImage;
-                }
+                throw new NotImplementedException("Inform loss");
             }
 
             var result = MessageBox.Show(this, text, caption, MessageBoxButton.YesNo);
@@ -215,10 +203,14 @@ namespace Minesweeper
                 // we didn't blow up, so let's show the user what changed
                 foreach (var cell in changedCells)
                 {
-                    lbl = GetLabelFromCoord(cell.coordinate);
+                    throw new NotImplementedException("Update changed cells");
+
+                    // TODO: When do we NOT want to change a Cell?
+
+                    // TODO: How do we get the UI element at a specific coordinate?
 
                     // yay colors
-                    if (cell.neighboringMines > 0 && cell.neighboringMines <= colors.Length)
+                    if (false /* TODO */)
                     {
                         lbl.Content = cell.neighboringMines.ToString();
                         lbl.Foreground = colors[cell.neighboringMines - 1];
@@ -237,6 +229,7 @@ namespace Minesweeper
             else
             {
                 // RIP
+                // TODO: Why do we not need to do anything here?
             }
 
             e.Handled = true;
