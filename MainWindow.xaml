@@ -10,7 +10,8 @@
         MinHeight="200" MinWidth="200"
         SizeToContent="WidthAndHeight"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="Resources/mine.ico">
 
     <StackPanel>
         <Menu>
@@ -34,7 +35,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <TextBlock x:Name="TimerText" Text="0" FontSize="20" Grid.Column="0" HorizontalAlignment="Left"/>
                 <Label x:Name="statusImage" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 <TextBlock x:Name="MinesLeft" Text="0" FontSize="20" Grid.Column="2" HorizontalAlignment="Right"/>

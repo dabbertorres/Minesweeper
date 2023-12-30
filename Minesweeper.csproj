@@ -15,7 +15,7 @@
     <Resource Include="Resources/happy.png"/>
     <Resource Include="Resources/mine.png"/>
     <Resource Include="Resources/scared.png"/>
-    <Resource Include="mine.ico"/>
+    <Resource Include="Resources/mine.ico"/>
   </ItemGroup>
 
   <ItemGroup>
