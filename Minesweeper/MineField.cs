@@ -85,39 +85,13 @@ namespace Minesweeper
             // removing coordinates as they are selected
             var possibleCoordinates = new List<Coordinate>(width * height);
 
-            // fill our set of coordinates
-            for (int y = 0; y < height; ++y)
-            {
-                for (int x = 0; x < width; ++x)
-                {
-                    possibleCoordinates.Add(new Coordinate(x, y));
-                }
-            }
-
-            // remove the cell corresponding to startX, startY and its neighbors from the possible coordinates
-            possibleCoordinates.Remove(new Coordinate(startX, startY));
-            possibleCoordinates.RemoveAll(Neighbors(startX, startY).Contains);
+            // TODO: How can we fill the above List with all of the possible coordinates in this MineField?
 
             // we don't want the same minefield the same every time
             Random rand = new Random();
 
-            for (int i = 0; i < mineCount; ++i)
-            {
-                int coordIdx = rand.Next(possibleCoordinates.Count);
-
-                var coord = possibleCoordinates[coordIdx];
-
-                // we don't want to generate this coordinate again
-                possibleCoordinates.RemoveAt(coordIdx);
-
-                // don't recommend stepping foot here
-                cells[coord.x, coord.y].IsMine = true;
-
-                foreach (var c in Neighbors(coord.x, coord.y))
-                {
-                    ++cells[c.x, c.y].NeighboringMines;
-                }
-            }
+            // TODO: How can we select 'mineCount' number of coordinate pairs to be mines?
+            //       Remember that we cannot have multiple mines at the same coordinate.
         }
 
         /// <summary>
@@ -257,11 +231,28 @@ namespace Minesweeper
         /// <returns>The number of flagged <see cref="Cell"/>s</returns>
         public int FlagsPlaced()
         {
-            int placed = (from Cell c in cells
-                          where c.Flagged
-                          select c).Count();
+            throw new NotImplementedException("Pick a method for counting placed flags");
 
-            return placed;
+            // TODO: Which version do you like better? They have the same result.
+            // NOTE: Change the "true" on the next line to "false" to switch implemementation.
+#if true
+            int placedFlags = (from Cell c in cells
+                               where c.Flagged
+                               select c).Count();
+#else
+            int placedFlags = 0;
+
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    if (cells[i, j].Flagged)
+                        ++placedFlags;
+                }
+            }
+#endif
+
+            return placedFlags;
         }
 
         /// <summary>
@@ -270,9 +261,27 @@ namespace Minesweeper
         /// <returns>The number of unflagged <see cref="Cell"/>s containing a mine</returns>
         public int MinesLeft()
         {
-            int flaggedMines = (from Cell c in cells
-                                where c.Flagged && c.IsMine
-                                select c).Count();
+            throw new NotImplementedException("Pick a method for counting the number of mines left");
+
+            int flaggedMines = 0;
+
+            // TODO: Which version do you like better? They have the same result.
+            // NOTE: Change the "true" on the next line to "false" to switch implemementation.
+#if true
+            flaggedMines = (from Cell c in cells
+                            where c.Flagged && c.IsMine
+                            select c).Count();
+#else
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    var c = cells[i, j];
+                    if (c.Flagged && c.IsMine)
+                        ++flaggedMines;
+                }
+            }
+#endif
 
             return MineCount - flaggedMines;
         }
@@ -283,9 +292,27 @@ namespace Minesweeper
         /// <returns>The number of unflagged and uncleared <see cref="Cell"/>s in the <see cref="MineField"/></returns>
         public int CellsLeft()
         {
+            throw new NotImplementedException("Pick a method for counting the number of uncleared and unflagged cells");
+
+            // TODO: Which version do you like better? They have the same result.
+            // NOTE: Change the "true" on the next line to "false" to switch implemementation.
+#if true
             int notCleared = (from Cell c in cells
                               where !c.Cleared && !c.Flagged
                               select c).Count();
+#else
+            int notCleared = 0;
+
+            for (int i = 0; i < Width; ++i)
+            {
+                for (int j = 0; j < Height; ++j)
+                {
+                    var c = cells[i, j];
+                    if (!c.Cleared && !c.Flagged)
+                        ++notCleared;
+                }
+            }
+#endif
 
             return notCleared;
         }

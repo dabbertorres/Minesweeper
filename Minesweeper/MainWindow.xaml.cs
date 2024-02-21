@@ -256,6 +256,7 @@ namespace Minesweeper
             else
             {
                 // RIP
+                // TODO: Why do we not need to do anything here?
             }
 
             e.Handled = true;

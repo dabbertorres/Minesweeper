@@ -57,13 +57,11 @@ namespace Minesweeper
             {
                 var cell = CurrentField[coord];
 
-                if (!cell.Flagged)
-                {
-                    changedCells.Add(new ChangedCell(coord, cell.NeighboringMines));
+                throw new NotImplementedException("Report changed cells");
 
-                    if (cell.NeighboringMines == 0)
-                        changedCells.AddRange(ClearLonelyNeighbors(coord));
-                }
+                // TODO: What do we do if a cell is safe to clear?
+                //       What if the user tries to clear a cell that is flagged?
+                //       Does it affect any neighbors at all? If so, under what conditions?
 
                 CheckGameWon();
 
@@ -88,11 +86,7 @@ namespace Minesweeper
         /// <returns>true if the <see cref="Cell"/> at (<paramref name="x"/>, <paramref name="y"/>) if it is now flagged, false otherwise</returns>
         public static bool ToggleFlagCell(int x, int y, ref bool cleared, ref int flagsLeft)
         {
-            if (CurrentField[x, y].Cleared)
-            {
-                cleared = true;
-                return false;
-            }
+            // TODO: What do we do if the user tries to flag a cleared cell?
 
             bool flagged = CurrentField.ToggleFlag(x, y);
 
@@ -111,14 +105,9 @@ namespace Minesweeper
         {
             var mines = new List<Coordinate>(CurrentField.MineCount);
 
-            for (int i = 0; i < CurrentField.Width; ++i)
-            {
-                for (int j = 0; j < CurrentField.Height; ++j)
-                {
-                    if (CurrentField[i, j].IsMine)
-                        mines.Add(new Coordinate(i, j));
-                }
-            }
+            // TODO: How can we get the coordinate of every Cell containing a mine?
+
+            throw new NotImplementedException("Getting all coordionates containing mines.");
 
             return mines;
         }
